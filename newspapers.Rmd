@@ -7,28 +7,31 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
-
-```{r}
 library(tidyverse)
 library(httr2)
 library(jsonlite)
+```
 
+```{r}
 base <- "https://www.loc.gov/collections/chronicling-america/"
 
 params <-  list(dl = "page",
                 start_date = "1941-12-01",
                 end_date = "1941-12-31",
-                location_state = "MN",
-                fa = "language:English",
+                location_state = "Minnesota",
+                fa = "language:english",
                 front_pages_only = "true",
-                fo = "json")
+                fo = "json",
+                searchType = "advanced")
 
 req <- request(base) |>
-  req_url_query(!!!query_params, multi = "explode")
+  req_url_query(!!!params)
 
 response <- req |> 
+  req_retry(max_tries = 100,
+            backoff = ~10) |>
   req_perform()
+
 
 resp_json_list <- resp_body_json(response)
 head(resp_json_list, 2)
