@@ -30,15 +30,15 @@ get_loc_items <- function(display_level = "page",
                           partof_title = "",
                           fa = "",
                           subject_ethnicity = "",
-                          rows = "",
+                          c = "",
                           search_type = "advanced",
                           front_pages_only = "") {
   base_url <- "https://www.loc.gov/collections/chronicling-america/"
   page <- 1
   end_page <- 10
-  results = list()
+  results = data.frame()
   
-  while (page < end_page) {
+  #while (page < end_page) {
   params <-  list(dl = display_level,
                   start_date = start_date,
                   end_date = end_date,
@@ -48,26 +48,32 @@ get_loc_items <- function(display_level = "page",
                   partof_title = "",
                   fa = fa,
                   subject_ethnicity = "",
-                  rows = rows,
+                  c = 100,
                   searchType = search_type,
                   front_pages_only = front_pages_only,
-                  fo = "json")
+                  fo = "json",
+                  at = "results,pagination")
   
   req <- request(base_url) |>
     req_url_query(!!!params)
     
+
+  
   print(req_dry_run(req)$url)
+  
   response <- req |> 
     req_retry(max_tries = 10,
               backoff = ~10) |>
     req_perform()
   
-  resp_json_df <- fromJSON(resp_body_string(response))
+  df <- fromJSON(resp_body_string(response))
   
   end_page <- resp_json_df[["pagination"]][["of"]]
-  page = page + 1
-  results <- append(results, list(resp_json_df$results))
-  }
+  #page = page + 1
+  
+  
+  data <- flatten(df$results)
+  results <- rbind(results, data)
   results <<- results
 }
 
@@ -77,33 +83,6 @@ get_loc_items(display_level = "page",
               end_date = "1941-12-31",
               fa = "eng",
               front_pages_only = "true")
-
-
-while (has_more) {
-  params$sp <- page
-  
-  req <- request(base) |>
-    req_url_query(!!!params)
-  
-  response <- req |> 
-    req_retry(max_tries = 100,
-              backoff = ~10) |>
-    req_perform()
-  
-  resp_json_df <- fromJSON(resp_body_string(response))
-  
-  if (length(resp_json_df$results) != 0) {
-    results <- append(results, list(resp_json_df$results))
-  }
-  
- has_more <- FALSE
-}
-
-
-
-
-
-
 
 
 data <- flatten(resp_json_df$results)
