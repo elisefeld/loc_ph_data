@@ -1,0 +1,281 @@
+---
+title: "testing text analysis"
+author: "Theresa"
+date: "2024-12-08"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(rvest)
+library(httr)
+library(httr2)
+library(jsonlite)
+library(polite)
+```
+
+```{r}
+
+get_loc_items <- function(display_level = "page",
+                          query = "",
+                          operation = "",
+                          start_date = "",
+                          end_date = "",
+                          location_state = "",
+                          location_city = "",
+                          location_county = "",
+                          batch = "",
+                          number_lccn = "",
+                          partof_title = "",
+                          fa = "",
+                          subject_ethnicity = "",
+                          c = "",
+                          search_type = "advanced",
+                          front_pages_only = "") {
+  base_url <- "https://www.loc.gov/collections/chronicling-america/"
+  page <- 1
+  end_page <- 10
+  results = data.frame()
+  
+  #while (page < end_page) {
+  params <-  list(dl = display_level,
+                  start_date = start_date,
+                  end_date = end_date,
+                  location_state = location_state,
+                  location_city = location_city,
+                  location_county = location_county,
+                  partof_title = "",
+                  fa = fa,
+                  subject_ethnicity = "",
+                  c = 100,
+                  searchType = search_type,
+                  front_pages_only = front_pages_only,
+                  fo = "json",
+                  at = "results,pagination")
+  
+  req <- request(base_url) |>
+    req_url_query(!!!params)
+    
+
+  
+  print(req_dry_run(req)$url)
+  
+  response <- req |> 
+    req_retry(max_tries = 10,
+              backoff = ~10) |>
+    req_perform()
+  
+  resp_json_df <- fromJSON(resp_body_string(response))
+  
+  end_page <- resp_json_df[["pagination"]][["of"]]
+  #page = page + 1
+  
+  
+  data <- flatten(resp_json_df$results)
+  results <- rbind(results, data)
+  return(results)
+}
+
+```
+        
+
+```{r}
+
+mn1941 <- get_loc_items(display_level = "page",
+              location_state = "California",
+              start_date = "1941-11-01",
+              end_date = "1941-12-31",
+              fa = "eng",
+              front_pages_only = "true")
+
+
+mn1941_clean <- mn1941 |>
+  select(index, date, title, partof_title, description, url, image_url, language, location_country, location_state, location_county, location_city, contributor, number_page, publication_frequency)
+
+mn1941_clean
+```
+
+```{r}
+# text of each first page
+mn1941_clean$description
+```
+
+
+
+```{r}
+mn1941_clean |>
+  unnest(partof_title) |>
+  distinct(partof_title) |>
+  filter(partof_title != "")
+
+```
+
+
+```{r}
+library(tidytext)
+bing_sentiments <- get_sentiments("bing")
+```
+
+```{r}
+# making each description from mn1941 tidy
+mn1941_tidy <- mn1941 |>
+  mutate(row_id = row_number()) |>
+  unnest_tokens(word, description, token = "words") |>
+  select(index, date, title, partof_title, url, image_url, language, location_country, location_state, location_county, location_city, contributor, number_page, publication_frequency, word)
+
+mn1941_tidy
+```
+
+
+```{r}
+# join bing sentiments tibble with mn1941_tidy to label each uncommon word as positive or negative
+mn1941_tidy_bing <- mn1941_tidy |>
+  inner_join(bing_sentiments, by = "word")
+
+mn1941_tidy_bing
+```
+
+
+```{r}
+# determine the average sentiment of each description
+mn1941_tidy_bing_summary <- mn1941_tidy_bing |>
+  mutate(sentiment_value = ifelse(sentiment == "positive", 1, -1)) |>
+  group_by(index) |>
+  summarize(avg_sentiment = mean(sentiment_value, na.rm = TRUE)) |>
+  arrange(index)
+
+mn1941_tidy_bing_summary
+```
+
+
+```{r}
+ggplot(sentiment_summary, aes(x = index, y = avg_sentiment)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3) +
+  theme_minimal() +
+  labs(
+    y = "Average Sentiment"
+  )
+```
+
+    
+```{r}
+# same plot as above except its a bar graph
+mn1941_tidy_bing |>
+  count(index, sentiment) |>
+  pivot_wider(names_from = sentiment, values_from = n, values_fill = 0) |>
+  mutate(sentiment = positive - negative) |>
+  ggplot(aes(x = index, y = sentiment, fill = sentiment > 0)) +
+  geom_col(show.legend = FALSE) +
+  theme_minimal() +
+  labs(
+    x = "index",
+    y = "average",
+    title = "average sentiment by description"
+  )
+```
+
+
+```{r}
+# commonly used words in each description
+smart_stopwords <- get_stopwords(source = "smart")
+
+mn1941_counts <- mn1941_tidy |>
+  anti_join(smart_stopwords) |>
+  count(word, index, sort = TRUE)
+
+mn1941_counts
+```
+
+
+
+```{r}
+# bigrams
+mn1941_tidy_ngram <- mn1941_clean |>
+  unnest_tokens(bigram, description, token = "ngrams", n = 2) |>
+  filter(bigram != "NA")
+
+mn1941_tidy_ngram
+```
+
+  
+```{r}
+# filtering out common words
+mn1941_tidy_ngram_filtered <- mn1941_tidy_ngram |>
+  separate(bigram, c("word1", "word2"), sep = " ") |>
+  filter(!word1 %in% stop_words$word,
+         !word2 %in% stop_words$word) |>
+  count(word1, word2, sort = TRUE)
+
+mn1941_tidy_ngram_filtered
+```
+
+
+
+```{r}
+# graphing bigrams
+mn1941_tidy_ngram_graph <- mn1941_tidy_ngram_filtered |>
+  filter(n > 2) |>
+  graph_from_data_frame()
+
+set.seed(2017)
+
+ggraph(mn1941_tidy_ngram_graph, layout = "fr") +
+  geom_edge_link() +
+  geom_node_point() +
+  geom_node_text(aes(label = name), vjust = 1, hjust = 1)
+```
+
+
+
+Graph sentiment over time
+
+```{r}
+mn1941_chronological <- mn1941|>
+  arrange(date)
+```
+
+```{r}
+mn1941_chronological_tidy <- mn1941_chronological |>
+  mutate(row_id = row_number()) |>
+  unnest_tokens(word, description, token = "words") |>
+  select(index, date, title, partof_title, url, image_url, language, location_country, location_state, location_county, location_city, contributor, number_page, publication_frequency, word)
+```
+
+```{r}
+mn1941_chronological_tidy_bing <- mn1941_chronological_tidy |>
+  inner_join(bing_sentiments, by = "word")
+```
+
+```{r}
+# determine the average sentiment of each description
+mn1941_chronological_summary <- mn1941_chronological_tidy_bing |>
+  mutate(sentiment_value = ifelse(sentiment == "positive", 1, -1)) |>
+  group_by(index, date) |>
+  summarize(avg_sentiment = mean(sentiment_value, na.rm = TRUE), .groups = "drop") |>
+  arrange(date)
+```
+
+```{r}
+# getting average sentiment for each date
+mn1941_chronological_summary <- mn1941_chronological_summary|>
+  group_by(date) |>
+  summarize(
+    avg_sentiment = mean(avg_sentiment, na.rm = TRUE), .groups = "drop")
+```
+
+
+```{r}
+ggplot(mn1941_chronological_summary, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment > 0)) +
+  geom_col(show.legend = FALSE) +
+  theme_minimal() +
+  labs(
+    x = "date",
+    y = "average sentiment",
+    title = "average sentiment by date"
+  )
+```
+
+
+
