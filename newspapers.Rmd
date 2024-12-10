@@ -92,15 +92,12 @@ get_paginated_data(start_date = "1941-11-13",
 
 ```{r}
 data_clean <- final_results |>
-  select(index, date, title, partof_title, description, url, image_url, language, location_country, location_state, location_county, location_city, contributor, publication_frequency)
+  select(index, date, title, partof_title, description, url, image_url, language, location_country, location_state, location_county, location_city, contributor, publication_frequency, subject, subject_ethnicity)
 
 data_clean <- data_clean |>
   mutate(across(where(is.list), ~ sapply(.x, function(val) paste(val, collapse = ', '))))
 
-text_data <- data_clean |>
-  select(-image_url, -contributor)
-
-write.csv(text_data,"~/Code/R/data_sci_fall/Data/clean_data.csv", row.names = FALSE)
+write.csv(data_clean,"~/Code/R/data_sci_fall/Data/clean_data.csv", row.names = FALSE)
 ```
 
 
