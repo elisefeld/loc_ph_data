@@ -31,7 +31,6 @@ get_json_data <- function(params) {
 
 parse_json_data <- function(response) {
   data <- flatten(response$results)
-  print(response$pagination)
   has_more <- !is.null(response$pagination["next"][[1]])
   print(paste0("Has more pages: ", has_more))
   mylist <- list(data, has_more)
@@ -46,6 +45,7 @@ get_paginated_data <- function(display_level = "page",
                           location_state = "",
                           search_type = "advanced",
                           sp = "1",
+                          fa = "",
                           front_pages_only = "true"){
   final_results <- data.frame()
   page <- 1
@@ -62,6 +62,7 @@ get_paginated_data <- function(display_level = "page",
                   searchType = search_type,
                   front_pages_only = front_pages_only,
                   sp = page,
+                  fa = fa,
                   fo = "json",
                   at = "results,pagination")
        
@@ -83,7 +84,8 @@ get_paginated_data <- function(display_level = "page",
 ```{r}
 get_paginated_data(start_date = "1941-12-01",
                    end_date = "1941-12-31",
-                   location_state = "Minnesota")
+                   location_state = "Minnesota",
+                   fa = "language:english")
 
 data_clean <- final_results |>
   select(index, date, title, partof_title, description, url, image_url, language, location_country, location_state, location_county, location_city, contributor, number_page, publication_frequency)
