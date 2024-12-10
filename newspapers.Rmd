@@ -19,6 +19,7 @@ final_results <- data.frame()
 
 get_json_data <- function(params) {
   req <- request(base_url) |>
+    req_throttle(rate = 20/10) |>
     req_url_query(!!!params)
   
   response <- req |>
@@ -32,6 +33,7 @@ get_json_data <- function(params) {
 parse_json_data <- function(response) {
   data <- flatten(response$results)
   has_more <- !is.null(response$pagination["next"][[1]])
+  print(paste0(response$pagination$to, "/", response$pagination$of))
   print(paste0("Has more pages: ", has_more))
   mylist <- list(data, has_more)
   return(mylist)
@@ -82,13 +84,23 @@ get_paginated_data <- function(display_level = "page",
 ```
 
 ```{r}
-get_paginated_data(start_date = "1941-12-01",
-                   end_date = "1941-12-31",
-                   location_state = "Minnesota",
+get_paginated_data(start_date = "1941-11-13",
+                   end_date = "1942-12-31",
+                   location_state = "",
                    fa = "language:english")
+```
 
+```{r}
 data_clean <- final_results |>
-  select(index, date, title, partof_title, description, url, image_url, language, location_country, location_state, location_county, location_city, contributor, number_page, publication_frequency)
+  select(index, date, title, partof_title, description, url, image_url, language, location_country, location_state, location_county, location_city, contributor, publication_frequency)
+
+data_clean <- data_clean |>
+  mutate(across(where(is.list), ~ sapply(.x, function(val) paste(val, collapse = ', '))))
+
+text_data <- data_clean |>
+  select(-image_url, -contributor)
+
+write.csv(text_data,"~/Code/R/data_sci_fall/Data/clean_data.csv", row.names = FALSE)
 ```
 
 
