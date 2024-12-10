@@ -9,75 +9,78 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(rvest)
-library(httr)
 library(httr2)
 library(jsonlite)
-library(polite)
 ```
 
 ```{r}
-get_loc_items <- function(display_level = "page",
+base_url <- "https://www.loc.gov/collections/chronicling-america/"
+final_results <- data.frame()
+
+
+get_json_data <- function(params) {
+  req <- request(base_url) |>
+    req_url_query(!!!params)
+  
+  response <- req |>
+    req_perform() |>
+    resp_body_string() |>
+    fromJSON()
+  
+  return(response)
+}
+
+
+parse_json_data <- function(response) {
+  data <- flatten(response$results)
+  has_more <- is.null(response$pagination["next"][[1]])
+  return(data)
+}
+```
+
+
+```{r}
+get_paginated_data <- function(display_level = "page",
                           start_date = "",
                           end_date = "",
                           location_state = "",
-                          number_page = 0000000001,
                           search_type = "advanced",
-                          front_pages_only = "") {
-  base_url <- "https://www.loc.gov/collections/chronicling-america/"
-  params <-  list(dl = display_level,
+                          front_pages_only = "true"){
+  final_results <- data.frame()
+  page <- 0000000001
+  has_more <- TRUE
+  
+   #while (has_more) {
+     print(paste0("Getting Page: ", page))
+     
+       # Set the query parameters
+       params <-  list(dl = display_level,
                   start_date = start_date,
                   end_date = end_date,
-                  number_page = number_page,
+                  number_page = page,
                   searchType = search_type,
                   front_pages_only = front_pages_only,
                   fo = "json",
                   at = "results,pagination")
-  
-  req <- request(base_url) |>
-    req_url_query(!!!params)
-  
-  response <- req |> 
-    req_perform()
-  
-  response <- fromJSON(resp_body_string(response))
-  
-  data <- flatten(response$results)
-  has_next <- is.null((results$pagination["next"][[1]]))
-}
-
-get_data <- function(display_level = "",
-                      location_state = "",
-                      start_date = "",
-                      end_date = "",
-                      front_pages_only = "") {
-  results <- data.frame()
-  page = 0000000001
-  has_more = TRUE
-   while (has_more == TRUE) {
-     print(paste0("Current Page: ", page))
-      page = page + 1
-      get_loc_items(display_level = display_level,
-                    location_state = location_state,
-                    start_date = start_date,
-                    end_date = end_date,
-                    front_pages_only = front_pages_only,
-                    number_page = page)
-      results <- rbind(results, data)
-      has_more <- is.null(results$pagination['next'][[1]])
-    } 
-  print("There are NO more pages to index")
-  results <<- results
+       
+     response <- get_json_data(params)
+     parsed <- parse_json_data(response)
+     print(parsed)
+     
+     final_results <- rbind(final_results, parsed)
+     
+     has_more = FALSE
+     #has_more <- !is.null(parsed$pagination["next"])
+     #page <- page + 1
+   #}
+  return(final_results)
 }
 ```
 
 
+
 ```{r}
-get_data(display_level = "page",
-              location_state = "Minnesota",
-              start_date = "1941-12-01",
-              end_date = "1941-12-31",
-              #fa = "eng",
-              front_pages_only = "true")
+get_paginated_data()
 
 data <- flatten(resp_json_df$results)
 
