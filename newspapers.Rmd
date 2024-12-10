@@ -18,37 +18,35 @@ library(polite)
 ```{r}
 
 get_loc_items <- function(display_level = "page",
-                          query = "",
-                          operation = "",
+                          #query = "",
+                          #operation = "",
                           start_date = "",
                           end_date = "",
                           location_state = "",
-                          location_city = "",
-                          location_county = "",
-                          batch = "",
-                          number_lccn = "",
-                          partof_title = "",
-                          fa = "",
-                          subject_ethnicity = "",
-                          c = "",
+                          #location_city = "",
+                          #location_county = "",
+                          #batch = "",
+                          #number_lccn = "",
+                          #partof_title = "",
+                          #fa = "",
+                          #subject_ethnicity = "",
+                          #c = "",
+                          number_page = 0000000001,
                           search_type = "advanced",
                           front_pages_only = "") {
   base_url <- "https://www.loc.gov/collections/chronicling-america/"
-  page <- 1
-  end_page <- 10
-  results = data.frame()
   
-  #while (page < end_page) {
   params <-  list(dl = display_level,
                   start_date = start_date,
                   end_date = end_date,
-                  location_state = location_state,
-                  location_city = location_city,
-                  location_county = location_county,
-                  partof_title = "",
-                  fa = fa,
-                  subject_ethnicity = "",
-                  c = 100,
+                  #location_state = location_state,
+                  #location_city = location_city,
+                  #location_county = location_county,
+                  #partof_title = "",
+                  #fa = fa,
+                  #subject_ethnicity = "",
+                  c = "",
+                  number_page = number_page,
                   searchType = search_type,
                   front_pages_only = front_pages_only,
                   fo = "json",
@@ -56,32 +54,49 @@ get_loc_items <- function(display_level = "page",
   
   req <- request(base_url) |>
     req_url_query(!!!params)
-    
-
-  
-  print(req_dry_run(req)$url)
   
   response <- req |> 
-    req_retry(max_tries = 10,
-              backoff = ~10) |>
     req_perform()
   
-  df <- fromJSON(resp_body_string(response))
+  response <- fromJSON(resp_body_string(response))
   
-  end_page <- resp_json_df[["pagination"]][["of"]]
-  #page = page + 1
+  data <- flatten(response$results)
+  has_next <- is.null((response$pagination["current"][[1]]))
+  print(has_next)
+  print(typeof(response$pagination["current"][[1]]))
+}
+
   
-  
-  data <- flatten(df$results)
-  results <- rbind(results, data)
+get_data <- function(display_level = "",
+                      location_state = "",
+                      start_date = "",
+                      end_date = "",
+                      front_pages_only = "") {
+  results <- data.frame()
+  page = 0000000001
+  has_more = TRUE
+   while (has_more == TRUE) {
+     print(paste0("Current Page: ", page))
+      page = page + 1
+      get_loc_items(display_level = display_level,
+                    location_state = location_state,
+                    start_date = start_date,
+                    end_date = end_date,
+                    front_pages_only = front_pages_only,
+                    number_page = page)
+      results <- rbind(results, data)
+      print(typeof(response$pagination["current"][[1]]))
+      has_more <- is.null(response$pagination['current'][[1]])
+    } 
+  print("There are NO more pages to index")
   results <<- results
 }
 
-get_loc_items(display_level = "page",
+get_data(display_level = "page",
               location_state = "Minnesota",
               start_date = "1941-12-01",
               end_date = "1941-12-31",
-              fa = "eng",
+              #fa = "eng",
               front_pages_only = "true")
 
 
