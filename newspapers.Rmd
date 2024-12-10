@@ -31,9 +31,11 @@ get_json_data <- function(params) {
 
 parse_json_data <- function(response) {
   data <- flatten(response$results)
-  has_more <- is.null(response$pagination["next"][[1]])
+  print(response$pagination)
+  has_more <- !is.null(response$pagination["next"][[1]])
   print(paste0("Has more pages: ", has_more))
-  return(data)
+  mylist <- list(data, has_more)
+  return(mylist)
 }
 ```
 
@@ -43,13 +45,13 @@ get_paginated_data <- function(display_level = "page",
                           end_date = "",
                           location_state = "",
                           search_type = "advanced",
-                          rows = 20,
+                          sp = "1",
                           front_pages_only = "true"){
   final_results <- data.frame()
-  page <- 0000000001
+  page <- 1
   has_more <- TRUE
   
-   #while (has_more) {
+   while (has_more) {
      print(paste0("Getting page ", page, "..."))
      
        # Set the query parameters
@@ -59,27 +61,29 @@ get_paginated_data <- function(display_level = "page",
                   number_page = page,
                   searchType = search_type,
                   front_pages_only = front_pages_only,
-                  rows = 20,
+                  sp = page,
                   fo = "json",
                   at = "results,pagination")
        
      response <- get_json_data(params)
-     parsed <- parse_json_data(response)
-     print(parsed)
+     mylist <- parse_json_data(response)
      
-     final_results <- rbind(final_results, parsed)
+     parsed <- mylist[[1]]
+     has_more <- mylist[[2]]
      
-     has_more = FALSE
-     #has_more <- !is.null(parsed$pagination["next"])
-     #page <- page + 1
-   #}
+     final_results <- bind_rows(final_results, parsed)
+
+     page <- page + 1
+   }
   print(paste0("Number of results: ", nrow(final_results)))
   final_results <<- final_results
 }
 ```
 
 ```{r}
-get_paginated_data()
+get_paginated_data(start_date = "1941-12-01",
+                   end_date = "1941-12-31",
+                   location_state = "Minnesota")
 
 data_clean <- final_results |>
   select(index, date, title, partof_title, description, url, image_url, language, location_country, location_state, location_county, location_city, contributor, number_page, publication_frequency)
