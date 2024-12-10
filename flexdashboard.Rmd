@@ -6,7 +6,7 @@ output:
     #vertical_layout: scroll
     theme:
       version: 4
-      bootswatch: lux
+      bootswatch: yeti
 runtime: shiny
 ---
 
@@ -15,28 +15,34 @@ knitr::opts_chunk$set(echo = TRUE)
 #Import data here
 ```
 
-About
-==========================
+# About
 
-Column {data-width=500}
--------------------------------------
+## Column {data-width="500"}
 
-### Box 1
-Talk about the purpose of the project here.
+### Background
+
+By [Elise Hachfeld](https://github.com/elisefeld) and [Theresa Worden](https://github.com/wordentheresa0)
+
+The way people consume media has changed drastically since 1941, but has it's content? We are interested in how major historical events affect the sentiment of people reflected in the media. To investigate this, we looked at the text of newspapers before and after the bombing of Pearl Harbor on December 7th, 1941.
+We sourced our data
+
+from the Library of Congress [Chronicling America](https://www.loc.gov/collections/chronicling-america/about-this-collection/) project, which contains historical American newspapers from 17?? to 1963.
+
+The data was accessed through the Chronicling America API using the [httr2](https://httr2.r-lib.org) and [jsonlite](https://jeroen.r-universe.dev/jsonlite) packages.
+
+View some more Pearl Harbor front pages [here](https://www.nypl.org/blog/2017/12/07/pearl-harbor-front-page).
+
+## Column {data-width="500"}
+
+```{r picture, echo = F, out.width = '100%'}
+knitr::include_graphics("images/pearl_harbor_front_page.png")
+```
 
 
-Column {data-width=500}
--------------------------------------
-### Box 2
-Talk about the Library of Congress API here. 
+# Section 1
 
+## Column {data-width="400"}
 
-Section 1
-==========================
-
-Column {data-width=400}
--------------------------------------
-   
 ### Box 1
 
 ```{r eruptions, echo=FALSE}
@@ -50,6 +56,7 @@ renderPlot({
 ```
 
 ### Parameters
+
 ```{r}
 #Add code for adjusting data here
 inputPanel(
@@ -61,19 +68,16 @@ inputPanel(
 )
 ```
 
+## Column {data-width="300"}
 
-Column {data-width=300}
--------------------------------------
 ### Box 3
+
 Talk about the graph here.
 
+# Section 2
 
-Section 2
-==========================
-   
-Row {.tabset .tabset-fade}
--------------------------------------
-   
+## Row {.tabset .tabset-fade}
+
 ### Box 1
 
 ```{r eruptions2, echo=FALSE}
@@ -85,9 +89,9 @@ renderPlot({
   lines(dens, col = "blue")
 })
 ```
- 
+
 ### Box 2
-    
+
 ```{r eruptions3, echo=FALSE}
 renderPlot({
   hist(faithful$eruptions, probability = TRUE, breaks = as.numeric(input$n_breaks),
@@ -98,12 +102,14 @@ renderPlot({
 })
 ```
 
-Row
--------------------------------------
+## Row
+
 ### Box 3
+
 Talk about the graph here.
 
 ### Parameters
+
 ```{r}
 #Add code for adjusting data here
 inputPanel(
@@ -115,11 +121,6 @@ inputPanel(
 )
 ```
 
+# Section 3
 
-Section 3
-==========================
-
-
-Section 4
-==========================
-
+# Section 4
