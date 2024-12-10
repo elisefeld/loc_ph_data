@@ -16,36 +16,17 @@ library(polite)
 ```
 
 ```{r}
-
 get_loc_items <- function(display_level = "page",
-                          #query = "",
-                          #operation = "",
                           start_date = "",
                           end_date = "",
                           location_state = "",
-                          #location_city = "",
-                          #location_county = "",
-                          #batch = "",
-                          #number_lccn = "",
-                          #partof_title = "",
-                          #fa = "",
-                          #subject_ethnicity = "",
-                          #c = "",
                           number_page = 0000000001,
                           search_type = "advanced",
                           front_pages_only = "") {
   base_url <- "https://www.loc.gov/collections/chronicling-america/"
-  
   params <-  list(dl = display_level,
                   start_date = start_date,
                   end_date = end_date,
-                  #location_state = location_state,
-                  #location_city = location_city,
-                  #location_county = location_county,
-                  #partof_title = "",
-                  #fa = fa,
-                  #subject_ethnicity = "",
-                  c = "",
                   number_page = number_page,
                   searchType = search_type,
                   front_pages_only = front_pages_only,
@@ -61,12 +42,9 @@ get_loc_items <- function(display_level = "page",
   response <- fromJSON(resp_body_string(response))
   
   data <- flatten(response$results)
-  has_next <- is.null((response$pagination["current"][[1]]))
-  print(has_next)
-  print(typeof(response$pagination["current"][[1]]))
+  has_next <- is.null((results$pagination["current"][[1]]))
 }
 
-  
 get_data <- function(display_level = "",
                       location_state = "",
                       start_date = "",
@@ -85,13 +63,15 @@ get_data <- function(display_level = "",
                     front_pages_only = front_pages_only,
                     number_page = page)
       results <- rbind(results, data)
-      print(typeof(response$pagination["current"][[1]]))
-      has_more <- is.null(response$pagination['current'][[1]])
+      has_more <- is.null(results$pagination['current'][[1]])
     } 
   print("There are NO more pages to index")
   results <<- results
 }
+```
 
+
+```{r}
 get_data(display_level = "page",
               location_state = "Minnesota",
               start_date = "1941-12-01",
@@ -99,12 +79,10 @@ get_data(display_level = "page",
               #fa = "eng",
               front_pages_only = "true")
 
-
 data <- flatten(resp_json_df$results)
 
 data_clean <- data |>
   select(index, date, title, partof_title, description, url, image_url, language, location_country, location_state, location_county, location_city, contributor, number_page, publication_frequency)
-
 ```
 
 
