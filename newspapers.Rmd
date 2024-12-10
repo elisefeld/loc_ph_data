@@ -42,7 +42,7 @@ get_loc_items <- function(display_level = "page",
   response <- fromJSON(resp_body_string(response))
   
   data <- flatten(response$results)
-  has_next <- is.null((results$pagination["current"][[1]]))
+  has_next <- is.null((results$pagination["next"][[1]]))
 }
 
 get_data <- function(display_level = "",
@@ -63,7 +63,7 @@ get_data <- function(display_level = "",
                     front_pages_only = front_pages_only,
                     number_page = page)
       results <- rbind(results, data)
-      has_more <- is.null(results$pagination['current'][[1]])
+      has_more <- is.null(results$pagination['next'][[1]])
     } 
   print("There are NO more pages to index")
   results <<- results
