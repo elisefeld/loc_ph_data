@@ -3,7 +3,6 @@ title: "Newspaper Content Analysis"
 author: "Elise Hachfeld and Theresa Worden"
 output: 
   flexdashboard::flex_dashboard:
-    #vertical_layout: scroll
     theme:
       version: 4
       bootswatch: yeti
@@ -15,13 +14,25 @@ library(tidyverse)
 library(tidytext)
 library(DT)
 library(igraph)
+library(shinyWidgets)
+source("data_prep.R")
 ```
 
-```{r}
-download.file("https://raw.githubusercontent.com/elisefeld/loc_ph_data/main/Data/raw_data.rds",
-  destfile = "raw_data.rds")
+```{r import}
+#get_all_years("1941", "1942") commenting out because I don't want to run this every time...
+pearl_data <- prepare_data("pearl_data.rds")
 
-data_clean <- readRDS("raw_data.rds") |>
+download.file("https://raw.githubusercontent.com/elisefeld/loc_ph_data/main/Data/Years/data_1941.rds",
+  destfile = "data_1941.rds")
+
+download.file("https://raw.githubusercontent.com/elisefeld/loc_ph_data/main/Data/Years/data_1942.rds",
+  destfile = "data_1942.rds")
+
+data1941 <- readRDS("data_1941.rds")
+data1942 <- readRDS("data_1942.rds")
+
+data_clean <- bind_rows(data1941,
+                        data1942) |>
   select(index,
          date,
          title,
@@ -53,9 +64,13 @@ data_clean <- readRDS("raw_data.rds") |>
   mutate(across(everything(), ~ ifelse(. == "NULL", NA, .))) |>
   mutate(as_date = ymd(date))
 
+pearl_data <- data_clean |> 
+  filter(as_date > "1941-09-07" & as_date < "1942-03-07")
+
 bing_sentiments <- get_sentiments("bing")
 smart_stopwords <- get_stopwords(source = "smart")
 ```
+
 
 # About
 
@@ -65,10 +80,9 @@ smart_stopwords <- get_stopwords(source = "smart")
 
 By [Elise Hachfeld](https://github.com/elisefeld) and [Theresa Worden](https://github.com/wordentheresa0)
 
-The way people consume media has changed drastically since 1941, but has it's content? We are interested in how major historical events affect the sentiment of people reflected in the media. To investigate this, we looked at the text of newspapers before and after the bombing of Pearl Harbor on December 7th, 1941.
-We sourced our data
+The way people consume media has changed drastically since 1941, but has its content? We are interested in how major historical events affect the sentiment of people reflected in the media. To investigate this, we looked at the text of newspapers 3 months before and after the bombing of Pearl Harbor on December 7th, 1941.
 
-from the Library of Congress [Chronicling America](https://www.loc.gov/collections/chronicling-america/about-this-collection/) project, which contains historical American newspapers from 17?? to 1963.
+We sourced our data from the Library of Congress [Chronicling America](https://www.loc.gov/collections/chronicling-america/about-this-collection/) project, which contains historical American newspapers from 1756 to 1963.
 
 The data was accessed through the Chronicling America API using the [httr2](https://httr2.r-lib.org) and [jsonlite](https://jeroen.r-universe.dev/jsonlite) packages.
 
@@ -84,14 +98,39 @@ knitr::include_graphics("images/pearl_harbor_front_page.png")
 # Common Words
 ## Column {data-width="500"}
 ```{r}
-words <- data_clean |>
+output$filter_ui <- renderUI({
+  tagList(
+    pickerInput(
+      "state_filter",
+      label = "Select State(s):",
+      choices = unique(pearl_data$state),
+      options = list(`actions-box` = TRUE),
+      multiple = TRUE
+    ),
+    sliderInput(
+      "date_filter",
+      "Date Range:",
+      min = as.Date(min(pearl_data$as_date, na.rm = TRUE)),
+      max = as.Date(max(pearl_data$as_date, na.rm = TRUE)),
+      value = range(pearl_data$as_date, na.rm = TRUE)
+    )
+  )
+})
+```
+
+```{r}
+words <- pearl_data |>
   mutate(row_id = row_number()) |>
   unnest_tokens(word, text_data, token = "words") |>
-  filter(str_detect(word, "[a-z]"))  #filter out hebrew characters and numbers
+  filter(str_detect(word, "[a-z]"))  #filter out Hebrew characters and numbers
 
 words_clean <- words |>
   anti_join(smart_stopwords) |>
   count(word, sort = TRUE)
+```
+
+## Column {data-width="500"}
+```{r}
 
 words_clean |>
   head(1000) |>
@@ -100,7 +139,7 @@ words_clean |>
 
 ## Column {data-width="500"}
 ```{r}
-ngram <- data_clean |>
+ngram <- pearl_data |>
   unnest_tokens(bigram, text_data, token = "ngrams", n = 2) |>
   filter(bigram != "NA")
 
