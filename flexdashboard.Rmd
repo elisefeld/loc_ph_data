@@ -9,50 +9,19 @@ output:
       bootswatch: yeti
 runtime: shiny
 ---
-
 ```{r global, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(tidytext)
 library(DT)
 library(igraph)
+```
 
-download.file("https://raw.githubusercontent.com/elisefeld/loc_ph_data/main/data_1939.rds",
-  destfile = "data_1939.rds")
+```{r}
+download.file("https://raw.githubusercontent.com/elisefeld/loc_ph_data/main/Data/raw_data.rds",
+  destfile = "raw_data.rds")
 
-download.file("https://raw.githubusercontent.com/elisefeld/loc_ph_data/main/data_1940.rds",
-  destfile = "data_1940.rds")
-
-download.file("https://raw.githubusercontent.com/elisefeld/loc_ph_data/main/data_1941.rds",
-  destfile = "data_1941.rds")
-
-download.file("https://raw.githubusercontent.com/elisefeld/loc_ph_data/main/data_1942.rds",
-  destfile = "data_1942.rds")
-
-download.file("https://raw.githubusercontent.com/elisefeld/loc_ph_data/main/data_1943.rds",
-  destfile = "data_1943.rds")
-
-download.file("https://raw.githubusercontent.com/elisefeld/loc_ph_data/main/data_1944.rds",
-  destfile = "data_1944.rds")
-
-download.file("https://raw.githubusercontent.com/elisefeld/loc_ph_data/main/data_1945.rds",
-  destfile = "data_1945.rds")
-
-data1939 <- readRDS("data_1939.rds")
-data1940 <- readRDS("data_1939.rds")
-data1941 <- readRDS("data_1941.rds")
-data1942 <- readRDS("data_1942.rds")
-data1943 <- readRDS("data_1943.rds")
-data1944 <- readRDS("data_1939.rds")
-data1945 <- readRDS("data_1945.rds")
-
-data_clean <- bind_rows(data1939,
-                        data1940,
-                        data1941,
-                        data1942,
-                        data1943,
-                        data1944,
-                        data1945) |>
+data_clean <- readRDS("raw_data.rds") |>
   select(index,
          date,
          title,
