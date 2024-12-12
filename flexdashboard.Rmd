@@ -1,5 +1,5 @@
 ---
-title: "Pearl Harbor Newspaper Content Analysis"
+title: "Newspaper Content Analysis"
 author: "Elise Hachfeld and Theresa Worden"
 output: 
   flexdashboard::flex_dashboard:
@@ -12,7 +12,80 @@ runtime: shiny
 
 ```{r global, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-#Import data here
+library(tidyverse)
+library(tidytext)
+library(DT)
+library(igraph)
+
+download.file("https://raw.githubusercontent.com/elisefeld/loc_ph_data/main/data_1939.rds",
+  destfile = "data_1939.rds")
+
+download.file("https://raw.githubusercontent.com/elisefeld/loc_ph_data/main/data_1940.rds",
+  destfile = "data_1940.rds")
+
+download.file("https://raw.githubusercontent.com/elisefeld/loc_ph_data/main/data_1941.rds",
+  destfile = "data_1941.rds")
+
+download.file("https://raw.githubusercontent.com/elisefeld/loc_ph_data/main/data_1942.rds",
+  destfile = "data_1942.rds")
+
+download.file("https://raw.githubusercontent.com/elisefeld/loc_ph_data/main/data_1943.rds",
+  destfile = "data_1943.rds")
+
+download.file("https://raw.githubusercontent.com/elisefeld/loc_ph_data/main/data_1944.rds",
+  destfile = "data_1944.rds")
+
+download.file("https://raw.githubusercontent.com/elisefeld/loc_ph_data/main/data_1945.rds",
+  destfile = "data_1945.rds")
+
+data1939 <- readRDS("data_1939.rds")
+data1940 <- readRDS("data_1939.rds")
+data1941 <- readRDS("data_1941.rds")
+data1942 <- readRDS("data_1942.rds")
+data1943 <- readRDS("data_1943.rds")
+data1944 <- readRDS("data_1939.rds")
+data1945 <- readRDS("data_1945.rds")
+
+data_clean <- bind_rows(data1939,
+                        data1940,
+                        data1941,
+                        data1942,
+                        data1943,
+                        data1944,
+                        data1945) |>
+  select(index,
+         date,
+         title,
+         partof_title,
+         description,
+         url,
+         image_url,
+         language,
+         location_state,
+         location_county, location_city,
+         contributor,
+         publication_frequency,
+         subject,
+         subject_ethnicity) |>
+  mutate(across(where(is.list) & !all_of("subject"),
+                ~ sapply(.x, function(val) paste(val, collapse = ', ')))) |>
+  
+  mutate(language = str_remove(language, "[, ]?english[, ]?"),
+         language = str_remove(language, ","),
+         language = str_trim(language)) |>
+  
+  rename(newspaper_title = partof_title,
+         text_data = description,
+         state = location_state,
+         city = location_city,
+         other_language = language) |>
+  
+  mutate(across(everything(), ~ ifelse(. == "", NA, .))) |>
+  mutate(across(everything(), ~ ifelse(. == "NULL", NA, .))) |>
+  mutate(as_date = ymd(date))
+
+bing_sentiments <- get_sentiments("bing")
+smart_stopwords <- get_stopwords(source = "smart")
 ```
 
 # About
@@ -39,33 +112,61 @@ knitr::include_graphics("images/pearl_harbor_front_page.png")
 ```
 
 
-# Section 1
+# Common Words
+## Column {data-width="500"}
+```{r}
+words <- data_clean |>
+  mutate(row_id = row_number()) |>
+  unnest_tokens(word, text_data, token = "words") |>
+  filter(str_detect(word, "[a-z]"))  #filter out hebrew characters and numbers
+
+words_clean <- words |>
+  anti_join(smart_stopwords) |>
+  count(word, sort = TRUE)
+
+words_clean |>
+  head(1000) |>
+  DT::datatable(options = list(bPaginate = TRUE)) #Not sure why this isn't showing on the site
+```
+
+## Column {data-width="500"}
+```{r}
+ngram <- data_clean |>
+  unnest_tokens(bigram, text_data, token = "ngrams", n = 2) |>
+  filter(bigram != "NA")
+
+ngram_filter <- ngram |>
+  separate(bigram, c("word1", "word2"), sep = " ") |>
+  filter(!word1 %in% stop_words$word,
+         !word2 %in% stop_words$word) |>
+  count(word1, word2, sort = TRUE)
+
+ngram_filter_graph <- ngram_filter |>
+  filter(n > 2) |>
+  graph_from_data_frame()
+
+#ggraph(ngram_filter_graph, layout = "fr") +
+#  geom_edge_link() +
+#  geom_node_point() +
+#  geom_node_text(aes(label = name), vjust = 1, hjust = 1)
+```
+
+
+# Section
 
 ## Column {data-width="400"}
 
 ### Box 1
 
 ```{r eruptions, echo=FALSE}
-renderPlot({
-  hist(faithful$eruptions, probability = TRUE, breaks = as.numeric(input$n_breaks),
-       xlab = "Duration (minutes)", main = "Geyser eruption duration")
-  
-  dens <- density(faithful$eruptions, adjust = input$bw_adjust)
-  lines(dens, col = "blue")
-})
+
 ```
 
 ### Parameters
 
 ```{r}
 #Add code for adjusting data here
-inputPanel(
-  selectInput("n_breaks", label = "Number of bins:",
-              choices = c(10, 20, 35, 50), selected = 20),
-  
-  sliderInput("bw_adjust", label = "Bandwidth adjustment:",
-              min = 0.2, max = 2, value = 1, step = 0.2)
-)
+
 ```
 
 ## Column {data-width="300"}
@@ -74,32 +175,64 @@ inputPanel(
 
 Talk about the graph here.
 
-# Section 2
+# Sentiment Analysis
 
 ## Row {.tabset .tabset-fade}
 
 ### Box 1
+```{r, echo=FALSE}
+bing <- words |>
+  inner_join(bing_sentiments, by = "word")
 
-```{r eruptions2, echo=FALSE}
-renderPlot({
-  hist(faithful$eruptions, probability = TRUE, breaks = as.numeric(input$n_breaks),
-       xlab = "Duration (minutes)", main = "Geyser eruption duration")
-  
-  dens <- density(faithful$eruptions, adjust = input$bw_adjust)
-  lines(dens, col = "blue")
-})
+bing_by_page <- bing |>
+  mutate(sentiment_value = ifelse(sentiment == "positive", 1, -1)) |>
+  group_by(index) |>
+  summarize(avg_sentiment = mean(sentiment_value, na.rm = TRUE)) |>
+  arrange(index)
+```
+
+```{r}
+bing |>
+  count(index, sentiment) |>
+  pivot_wider(names_from = sentiment, values_from = n, values_fill = 0) |>
+  mutate(sentiment = positive - negative) |>
+  ggplot(aes(x = index, y = sentiment, fill = sentiment > 0)) +
+  geom_col(show.legend = FALSE) +
+  theme_minimal() +
+  labs(
+    x = "index",
+    y = "average",
+    title = "average sentiment by description"
+  )
 ```
 
 ### Box 2
 
-```{r eruptions3, echo=FALSE}
-renderPlot({
-  hist(faithful$eruptions, probability = TRUE, breaks = as.numeric(input$n_breaks),
-       xlab = "Duration (minutes)", main = "Geyser eruption duration")
-  
-  dens <- density(faithful$eruptions, adjust = input$bw_adjust)
-  lines(dens, col = "blue")
-})
+```{r, echo=FALSE}
+date_bing <- bing |>
+  group_by(index, date) |>
+  mutate(sentiment_value = ifelse(sentiment == "positive", 1, -1)) |>
+  summarize(avg_sentiment = mean(sentiment_value, na.rm = TRUE), .groups = "drop") |>
+  arrange(date)
+
+date_summary <- date_bing |>
+  group_by(date) |>
+  summarize(avg_sentiment = mean(avg_sentiment, na.rm = TRUE), .groups = "drop")
+
+ggplot(date_summary, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment > 0)) +
+  geom_col(show.legend = FALSE) +
+  theme_minimal() +
+  labs(
+    x = "date",
+    y = "average sentiment",
+    title = "average sentiment by date"
+  ) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b %d")
+
+print(date_summary$date)
+str(bing)
+str(date_bing)
+head(date_summary)
 ```
 
 ## Row
@@ -112,13 +245,7 @@ Talk about the graph here.
 
 ```{r}
 #Add code for adjusting data here
-inputPanel(
-  selectInput("n_breaks", label = "Number of bins:",
-              choices = c(10, 20, 35, 50), selected = 20),
-  
-  sliderInput("bw_adjust", label = "Bandwidth adjustment:",
-              min = 0.2, max = 2, value = 1, step = 0.2)
-)
+
 ```
 
 # Section 3
