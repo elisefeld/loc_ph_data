@@ -93,7 +93,7 @@ get_all_years <- function(start_year = "", end_year = "") {
   }
   raw_data <- bind_rows(data_list)
   
-  saveRDS(raw_data, "raw_data.rds")
+  saveRDS(raw_data, "year_data.rds")
   
   return(raw_data)
 }

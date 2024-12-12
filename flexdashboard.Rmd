@@ -22,55 +22,9 @@ source("data_prep.R")
 #get_all_years("1941", "1942") commenting out because I don't want to run this every time...
 pearl_data <- prepare_data("pearl_data.rds")
 
-download.file("https://raw.githubusercontent.com/elisefeld/loc_ph_data/main/Data/Years/data_1941.rds",
-  destfile = "data_1941.rds")
-
-download.file("https://raw.githubusercontent.com/elisefeld/loc_ph_data/main/Data/Years/data_1942.rds",
-  destfile = "data_1942.rds")
-
-data1941 <- readRDS("data_1941.rds")
-data1942 <- readRDS("data_1942.rds")
-
-data_clean <- bind_rows(data1941,
-                        data1942) |>
-  select(index,
-         date,
-         title,
-         partof_title,
-         description,
-         url,
-         image_url,
-         language,
-         location_state,
-         location_county, location_city,
-         contributor,
-         publication_frequency,
-         subject,
-         subject_ethnicity) |>
-  mutate(across(where(is.list) & !all_of("subject"),
-                ~ sapply(.x, function(val) paste(val, collapse = ', ')))) |>
-  
-  mutate(language = str_remove(language, "[, ]?english[, ]?"),
-         language = str_remove(language, ","),
-         language = str_trim(language)) |>
-  
-  rename(newspaper_title = partof_title,
-         text_data = description,
-         state = location_state,
-         city = location_city,
-         other_language = language) |>
-  
-  mutate(across(everything(), ~ ifelse(. == "", NA, .))) |>
-  mutate(across(everything(), ~ ifelse(. == "NULL", NA, .))) |>
-  mutate(as_date = ymd(date))
-
-pearl_data <- data_clean |> 
-  filter(as_date > "1941-09-07" & as_date < "1942-03-07")
-
 bing_sentiments <- get_sentiments("bing")
 smart_stopwords <- get_stopwords(source = "smart")
 ```
-
 
 # About
 
