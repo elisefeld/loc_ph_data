@@ -161,6 +161,11 @@ facet_wrap( ~ value, scales = "free") +
 ```
 ### Box 4 
 ```{r}
+result <- analyze_sentiment(data = words_clean, type = "afinn")
+afinn <- result[[1]]
+afinn_avg <- result[[2]]
+afinn_date <- result[[3]]
+
 ggplot(afinn_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment > 0)) +
   geom_col(show.legend = FALSE) +
   theme_minimal() +
@@ -174,6 +179,28 @@ ggplot(afinn_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentimen
   ) +
   scale_x_date(date_breaks = "1 month", date_labels = "%b %Y")
 
+```
+
+### Box 5
+```{r}
+nrc <- get_sentiments("nrc")
+words |>
+  inner_join(nrc) |>
+  count(word, sentiment, sort = TRUE) |>
+  group_by(sentiment) |>
+  slice_max(n, n = 10) |>
+  ungroup() |> 
+ggplot(aes(x = reorder(word, n), y = n, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  facet_wrap(~ sentiment, scales = "free_y") +
+  labs(
+    x = "Word",
+    y = "Count",
+    title = "Top 10 Most Common Words by Sentiment",
+    subtitle = "Based on NRC Sentiment Lexicon"
+  ) +
+  theme_minimal()
 ```
 
 ## Row
