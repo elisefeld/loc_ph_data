@@ -56,9 +56,10 @@ knitr::include_graphics("images/pearl_harbor_front_page.png")
 ## Column {data-width="500"}
 ```{r}
 words <- tokenize_words(data = pearl_data, text_column = "text_data")
-words_clean <- remove_stopwords()
+words_clean <- remove_stopwords(data = words)
 
 words_clean |>
+  count(word, sort = TRUE) |>
   head(1000) |>
   DT::datatable(options = list(bPaginate = TRUE)) #Not sure why this isn't showing on the site
 ```
@@ -66,6 +67,7 @@ words_clean |>
 ## Column {data-width="500"}
 ```{r}
 words_clean |>
+  count(word, sort = TRUE) |>
   slice_max(n, n = 20) |>
   ggplot(aes(fct_reorder(word, n), n)) +
   geom_col() +
@@ -89,9 +91,7 @@ words_clean |>
 ### Box 1
 
 ```{r eruptions, echo=FALSE}
-result <- analyze_bing_sentiment(data = words)
-bing <- result[[1]]
-bing_avg <- result[[2]]
+
 
 ```
 
@@ -113,18 +113,11 @@ Talk about the graph here.
 ## Row {.tabset .tabset-fade}
 
 ### Box 1
-```{r, echo=FALSE}
-bing <- words |>
-  inner_join(bing_sentiments, by = "word")
-
-bing_by_page <- bing |>
-  mutate(sentiment_value = ifelse(sentiment == "positive", 1, -1)) |>
-  group_by(index) |>
-  summarize(avg_sentiment = mean(sentiment_value, na.rm = TRUE)) |>
-  arrange(index)
-```
-
 ```{r}
+result <- analyze_bing_sentiment(data = words)
+bing <- result[[1]]
+bing_avg <- result[[2]]
+
 bing |>
   count(index, sentiment) |>
   pivot_wider(names_from = sentiment, values_from = n, values_fill = 0) |>
@@ -142,30 +135,18 @@ bing |>
 ### Box 2
 
 ```{r, echo=FALSE}
-date_bing <- bing |>
-  group_by(index, date) |>
-  mutate(sentiment_value = ifelse(sentiment == "positive", 1, -1)) |>
-  summarize(avg_sentiment = mean(sentiment_value, na.rm = TRUE), .groups = "drop") |>
-  arrange(date)
+bing_date <- analyze_bing_dates(bing)
 
-date_summary <- date_bing |>
-  group_by(date) |>
-  summarize(avg_sentiment = mean(avg_sentiment, na.rm = TRUE), .groups = "drop")
-
-ggplot(date_summary, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment > 0)) +
+ggplot(bing_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment > 0)) +
   geom_col(show.legend = FALSE) +
   theme_minimal() +
   labs(
-    x = "date",
-    y = "average sentiment",
-    title = "average sentiment by date"
+    title = "Average Newspaper Sentiment Over Time",
+    subtitle = "September 7th, 1941 to March 7th, 1942",
+    x = "Date",
+    y = "Average Sentiment",
   ) +
-  scale_x_date(date_breaks = "1 month", date_labels = "%b %d")
-
-print(date_summary$date)
-str(bing)
-str(date_bing)
-head(date_summary)
+  scale_x_date(date_breaks = "1 month", date_labels = "%b %Y")
 ```
 
 ## Row

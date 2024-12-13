@@ -31,19 +31,25 @@ remove_stopwords <- function(data) {
   data <- data |>
     anti_join(smart_stopwords, by = "word")
   
+  english <- data |>
+    filter(!(data$iso_code %in% supported_languages) | is.na(data$iso_code))
+  
   # Removing Non-English Stop Words
-  data <- data |>
+  other_langs <- data |>
     filter(data$iso_code %in% supported_languages & !is.na(data$iso_code))
     
-  for (iso_code in unique(data$iso_code)) {
+  for (iso_code in unique(other_langs$iso_code)) {
     stopwords <- get_stopwords(language = iso_code, source = "stopwords-iso")
     
-    data <- data |>
+    other_langs <- other_langs |>
       anti_join(stopwords, by = "word")
+    
+    data <- bind_rows(english, other_langs)
   }
   return(data)
 }
   
+
 
 analyze_bing_sentiment <- function(data) {
   bing_sentiments <- get_sentiments("bing")
@@ -57,6 +63,21 @@ analyze_bing_sentiment <- function(data) {
   
   return(list(bing, bing_avg))
 }
+
+analyze_bing_dates <- function(data) {
+  date_bing <- data |>
+    group_by(index, date) |>
+    mutate(sentiment_value = ifelse(sentiment == "positive", 1, -1)) |>
+    summarize(avg_sentiment = mean(sentiment_value, na.rm = TRUE), .groups = "drop") |>
+    arrange(date)
+  
+  date_summary <- date_bing |>
+    group_by(date) |>
+    summarize(avg_sentiment = mean(avg_sentiment, na.rm = TRUE), .groups = "drop")
+  
+  return(date_summary)
+}
+
 
 get_ngrams <- function() {
   ngram_filter <- ngram |>
