@@ -49,20 +49,19 @@ knitr::include_graphics("images/pearl_harbor_front_page.png")
 
 
 # Common Words
-## Column {data-width="500"}
-```{r}
-#Add filter here
-```
 
 ## Column {data-width="500"}
 ```{r}
 words <- tokenize_words(data = pearl_data, text_column = text_data, type = "words")
 words_clean <- remove_stopwords(data = words)
 
+output$datatable <- renderDataTable({
 words_clean |>
   count(word, sort = TRUE) |>
   head(1000) |>
-  DT::datatable(options = list(bPaginate = TRUE)) #Not sure why this isn't showing on the site
+  DT::datatable(options = list(bPaginate = TRUE)) })
+
+DT::dataTableOutput("datatable")
 ```
 
 ## Column {data-width="500"}
@@ -224,15 +223,36 @@ Talk about the graph here.
 ### Box 1
 
 ```{r eruptions, echo=FALSE}
-
-
+#IDK How to fix this???
+renderPlot({
+  data <- words |>
+    inner_join(nrc, by = "word") |>
+    count(publisher, sentiment, sort = TRUE) |>
+    group_by(sentiment, publisher) |>
+    slice_max(n, n = 10) |>
+    ungroup()
+    
+    data |>
+    ggplot(aes(x = reorder(publisher, n), y = n, fill = sentiment)) +
+    geom_col(show.legend = FALSE) +
+    coord_flip() +
+    facet_wrap(~ sentiment, scales = "free_y") +
+    labs(title = paste("Sentiments for Publishers in", input$state_selector),
+          x = "Publisher",
+          y = "Word Count"
+    ) +
+    theme_minimal()
+})
 ```
 
 ### Parameters
 
 ```{r}
-#Add code for adjusting data here
-
+pickerInput(inputId = "state_selector",
+            label = "Select State:",
+            choices = str_to_title(unique(words$state)),
+            multiple = FALSE,
+            options = pickerOptions(actionsBox = TRUE, liveSearch = TRUE))
 ```
 
 ## Column {data-width="300"}
