@@ -89,7 +89,7 @@ words_clean |>
 
 ## Row {.tabset .tabset-fade}
 
-### Box 1
+### Common Words (Bing Sentiment)
 ```{r}
 result <- analyze_sentiment(data = words_clean, type = "bing")
 bing <- result[[1]]
@@ -111,12 +111,12 @@ facet_wrap( ~ sentiment, scales = "free") +
     x = "Word",
     y = "Count",
     title = "Most Common Words by Bing Sentiment",
-    subtitle = "September 7th, 1941 to March 7th, 1942"
+    subtitle = "Based on the Bing Sentiment Lexicon"
   )
 
 ```
 
-### Box 2
+### Bing Sentiment Over Time
 
 ```{r, echo=FALSE}
 ggplot(bing_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment > 0)) +
@@ -125,7 +125,7 @@ ggplot(bing_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment
     geom_vline(xintercept = as.Date("1941-12-07"), color = "black") +
   labs(
     title = "Average Bing Sentiment Over Time",
-    subtitle = "September 7th, 1941 to March 7th, 1942",
+    subtitle = "Based on the Bing Sentiment Lexicon",
     x = "Date",
     y = "Average Sentiment",
     caption = "The black line represents the bombing of Pearl Harbor on December 7th, 1941. \n The United States declared war on Japan the next day."
@@ -134,7 +134,7 @@ ggplot(bing_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment
 
 ```
 
-### Box 3
+### Common Words (Afinn Sentiment)
 ```{r}
 result <- analyze_sentiment(data = words_clean, type = "afinn")
 afinn <- result[[1]]
@@ -155,11 +155,12 @@ facet_wrap( ~ value, scales = "free") +
   labs(
     x = "Word",
     y = "Count",
-    title = "Most Common Words by Afinn Sentiment",
-    subtitle = "September 7th, 1941 to March 7th, 1942"
+    title = "Most Common Words by Sentiment",
+    subtitle = "Based on the Afinn Sentiment Lexicon"
   )
 ```
-### Box 4 
+
+### Afinn Sentiment Over Time
 ```{r}
 result <- analyze_sentiment(data = words_clean, type = "afinn")
 afinn <- result[[1]]
@@ -172,7 +173,7 @@ ggplot(afinn_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentimen
     geom_vline(xintercept = as.Date("1941-12-07"), color = "black") +
   labs(
     title = "Average Afinn Sentiment Over Time",
-    subtitle = "September 7th, 1941 to March 7th, 1942",
+    subtitle = "Based on the Afinn Sentiment Lexicon",
     x = "Date",
     y = "Average Sentiment",
     caption = "The black line represents the bombing of Pearl Harbor on December 7th, 1941. \n The United States declared war on Japan the next day."
@@ -181,7 +182,7 @@ ggplot(afinn_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentimen
 
 ```
 
-### Box 5
+### NRC Sentiment
 ```{r}
 nrc <- get_sentiments("nrc")
 words |>
