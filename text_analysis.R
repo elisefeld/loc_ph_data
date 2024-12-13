@@ -2,7 +2,7 @@ library(tidyverse)
 library(tidytext)
 library(stopwords)
 
-tokenize_words <- function(data = pearl_data, text_column = "") {
+tokenize_words <- function(data, text_column) {
   words <- data |>
     mutate(row_id = row_number()) |>
     unnest_tokens(word, text_column, token = "words") |>
@@ -13,7 +13,7 @@ tokenize_words <- function(data = pearl_data, text_column = "") {
 
 
 
-tokenize_ngrams <- function(data = pearl_data, text_column = "") {
+tokenize_ngrams <- function(data, text_column) {
   ngram <- data |>
     unnest_tokens(bigram, text_column, token = "ngrams", n = 2) |>
     filter(bigram != "NA")
@@ -23,24 +23,40 @@ tokenize_ngrams <- function(data = pearl_data, text_column = "") {
 
 
 
-remove_stopwords <- function(data = words) {
-  words_clean <- data |>
-  anti_join(smart_stopwords) |>
-    group_by(iso_code) |>
-    nest() |>
-    mutate(cleaned_data = map2(data, iso_code, ~ {
-      stopwords <- get_stopwords(iso_code = .y, source = "stopwords-iso")
-      .x |>
-        anti_join(stopwords, by = "word") |>
-        count(word, sort = TRUE)
-    })
-    ) |>
-    unnest(cleaned_data)
-
-  return(words_clean)
+remove_stopwords <- function(data) {
+  smart_stopwords <- get_stopwords(source = "smart")
+  supported_languages <- stopwords_getlanguages(source = "stopwords-iso")
+  
+  # Removing English Stop Words
+  data <- data |>
+    anti_join(smart_stopwords, by = "word")
+  
+  # Removing Non-English Stop Words
+  data <- data |>
+    filter(data$iso_code %in% supported_languages & !is.na(data$iso_code))
+    
+  for (iso_code in unique(data$iso_code)) {
+    stopwords <- get_stopwords(language = iso_code, source = "stopwords-iso")
+    
+    data <- data |>
+      anti_join(stopwords, by = "word")
+  }
+  return(data)
 }
+  
 
-
+analyze_bing_sentiment <- function(data) {
+  bing_sentiments <- get_sentiments("bing")
+  bing <- data |>
+    inner_join(bing_sentiments, by = "word")
+  
+  bing_avg <- bing |>
+    mutate(sentiment_value = ifelse(sentiment == "positive", 1, -1)) |>
+    group_by(index) |>
+    summarize(avg_sentiment = mean(sentiment_value, na.rm = TRUE))
+  
+  return(list(bing, bing_avg))
+}
 
 get_ngrams <- function() {
   ngram_filter <- ngram |>

@@ -21,10 +21,7 @@ source("text_analysis.R")
 
 ```{r import}
 #get_all_years("1941", "1942") commenting out because I don't want to run this every time...
-pearl_data <- prepare_data("Data/pearl_data.rds")
-
-bing_sentiments <- get_sentiments("bing")
-smart_stopwords <- get_stopwords(source = "smart")
+pearl_data <- prepare_data(data = "Data/pearl_data.rds")
 ```
 
 # About
@@ -53,29 +50,12 @@ knitr::include_graphics("images/pearl_harbor_front_page.png")
 # Common Words
 ## Column {data-width="500"}
 ```{r}
-output$filter_ui <- renderUI({
-  tagList(
-    pickerInput(
-      "state_filter",
-      label = "Select State(s):",
-      choices = unique(pearl_data$state),
-      options = list(`actions-box` = TRUE),
-      multiple = TRUE
-    ),
-    sliderInput(
-      "date_filter",
-      "Date Range:",
-      min = as.Date(min(pearl_data$as_date, na.rm = TRUE)),
-      max = as.Date(max(pearl_data$as_date, na.rm = TRUE)),
-      value = range(pearl_data$as_date, na.rm = TRUE)
-    )
-  )
-})
+#Add filter here
 ```
 
 ## Column {data-width="500"}
 ```{r}
-words <- tokenize_text(pearl_data, text_column = "text_data")
+words <- tokenize_words(data = pearl_data, text_column = "text_data")
 words_clean <- remove_stopwords()
 
 words_clean |>
@@ -85,19 +65,15 @@ words_clean |>
 
 ## Column {data-width="500"}
 ```{r}
-ngram <- pearl_data |>
-  unnest_tokens(bigram, text_data, token = "ngrams", n = 2) |>
-  filter(bigram != "NA")
-
-ngram_filter <- ngram |>
-  separate(bigram, c("word1", "word2"), sep = " ") |>
-  filter(!word1 %in% stop_words$word,
-         !word2 %in% stop_words$word) |>
-  count(word1, word2, sort = TRUE)
-
-ngram_filter_graph <- ngram_filter |>
-  filter(n > 2) |>
-  graph_from_data_frame()
+words_clean |>
+  slice_max(n, n = 20) |>
+  ggplot(aes(fct_reorder(word, n), n)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "Most Common Words in Front Pages of Newspapers",
+       subtitle = "September 7th, 1941 to March 7th, 1942",
+       x = "Count",
+       y = "Word")
 
 #ggraph(ngram_filter_graph, layout = "fr") +
 #  geom_edge_link() +
@@ -113,6 +89,9 @@ ngram_filter_graph <- ngram_filter |>
 ### Box 1
 
 ```{r eruptions, echo=FALSE}
+result <- analyze_bing_sentiment(data = words)
+bing <- result[[1]]
+bing_avg <- result[[2]]
 
 ```
 
