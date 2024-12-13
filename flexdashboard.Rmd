@@ -85,6 +85,110 @@ words_clean |>
 ```
 
 
+# Sentiment Analysis
+
+## Row {.tabset .tabset-fade}
+
+### Box 1
+```{r}
+result <- analyze_sentiment(data = words_clean, type = "bing")
+bing <- result[[1]]
+bing_avg <- result[[2]]
+bing_date <- result[[3]]
+
+bing |>
+  group_by(sentiment, word) |>
+  summarize(n = n()) |>
+  arrange(sentiment, desc(n)) |>
+  group_by(sentiment) |>
+  slice_max(n, n = 10) |>
+  ungroup() |>
+  ggplot(aes(reorder(word, n), n, fill = as.factor(sentiment))) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+facet_wrap( ~ sentiment, scales = "free") +
+  labs(
+    x = "Word",
+    y = "Count",
+    title = "Most Common Words by Bing Sentiment",
+    subtitle = "September 7th, 1941 to March 7th, 1942"
+  )
+
+```
+
+### Box 2
+
+```{r, echo=FALSE}
+ggplot(bing_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment > 0)) +
+  geom_col(show.legend = FALSE) +
+  theme_minimal() +
+    geom_vline(xintercept = as.Date("1941-12-07"), color = "black") +
+  labs(
+    title = "Average Bing Sentiment Over Time",
+    subtitle = "September 7th, 1941 to March 7th, 1942",
+    x = "Date",
+    y = "Average Sentiment",
+    caption = "The black line represents the bombing of Pearl Harbor on December 7th, 1941. \n The United States declared war on Japan the next day."
+  ) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b %Y")
+
+```
+
+### Box 3
+```{r}
+result <- analyze_sentiment(data = words_clean, type = "afinn")
+afinn <- result[[1]]
+afinn_avg <- result[[2]]
+afinn_date <- result[[3]]
+
+afinn |>
+  group_by(value, word) |>
+  summarize(n = n()) |>
+  arrange(value, desc(n)) |>
+  group_by(value) |>
+  slice_max(n, n = 10) |>
+  ungroup() |>
+  ggplot(aes(reorder(word, n), n, fill = as.factor(value))) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+facet_wrap( ~ value, scales = "free") +
+  labs(
+    x = "Word",
+    y = "Count",
+    title = "Most Common Words by Afinn Sentiment",
+    subtitle = "September 7th, 1941 to March 7th, 1942"
+  )
+```
+### Box 4 
+```{r}
+ggplot(afinn_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment > 0)) +
+  geom_col(show.legend = FALSE) +
+  theme_minimal() +
+    geom_vline(xintercept = as.Date("1941-12-07"), color = "black") +
+  labs(
+    title = "Average Afinn Sentiment Over Time",
+    subtitle = "September 7th, 1941 to March 7th, 1942",
+    x = "Date",
+    y = "Average Sentiment",
+    caption = "The black line represents the bombing of Pearl Harbor on December 7th, 1941. \n The United States declared war on Japan the next day."
+  ) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b %Y")
+
+```
+
+## Row
+
+### Box 3
+
+Talk about the graph here.
+
+### Parameters
+
+```{r}
+#Add code for adjusting data here
+
+```
+
 # Section
 
 ## Column {data-width="400"}
@@ -109,103 +213,6 @@ words_clean |>
 
 Talk about the graph here.
 
-# Sentiment Analysis
-
-## Row {.tabset .tabset-fade}
-
-### Box 1
-```{r}
-result <- analyze_sentiment(data = words_clean, type = "bing")
-bing <- result[[1]]
-bing_avg <- result[[2]]
-bing_date <- result[[3]]
-
-bing |>
-  count(index, sentiment) |>
-  pivot_wider(names_from = sentiment, values_from = n, values_fill = 0) |>
-  mutate(sentiment = positive - negative) |>
-  ggplot(aes(x = index, y = sentiment, fill = sentiment > 0)) +
-  geom_col(show.legend = FALSE) +
-  theme_minimal() +
-  labs(
-    x = "index",
-    y = "average",
-    title = "average sentiment by description"
-  )
-```
-
-### Box 2
-
-```{r, echo=FALSE}
-ggplot(bing_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment > 0)) +
-  geom_col(show.legend = FALSE) +
-  theme_minimal() +
-    geom_vline(xintercept = as.Date("1941-12-07"), color = "black") +
-  labs(
-    title = "Average Newspaper Sentiment Over Time",
-    subtitle = "September 7th, 1941 to March 7th, 1942",
-    x = "Date",
-    y = "Average Sentiment",
-    caption = "The black line represents the bombing of Pearl Harbor on December 7th, 1941. \n The United States declared war on Japan the next day."
-  ) +
-  scale_x_date(date_breaks = "1 month", date_labels = "%b %Y")
-
-```
-
-### Box 3
-```{r}
-result <- analyze_sentiment(data = words_clean, type = "afinn")
-afinn <- result[[1]]
-afinn_avg <- result[[2]]
-afinn_date <- result[[3]]
-
-afinn |>
-  group_by(value, word) |>
-  summarize(n = n()) |>
-  arrange(value, desc(n)) |>
-  group_by(value) |>
-  slice_max(n, n = 10) |>
-  ungroup() |>
-  ggplot(aes(reorder(word, n), n, color = before_pearl_harbor)) +
-  geom_col(show.legend = FALSE) +
-  coord_flip() +
-facet_wrap( ~ value, scales = "free") +
-  labs(
-    x = "Word",
-    y = "Count",
-    title = "Most Common Words by Sentiment",
-    subtitle = "September 7th, 1941 to March 7th, 1942"
-  )
-
-  
-  
-analyze_afinn_dates(afinn) |>
-  ggplot(aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment > 0)) +
-  geom_col(show.legend = FALSE) +
-  theme_minimal() +
-  geom_vline(xintercept = as.Date("1941-12-07"), color = "black") +
-  labs(
-    title = "Average Newspaper Sentiment Over Time",
-    subtitle = "September 7th, 1941 to March 7th, 1942",
-    x = "Date",
-    y = "Average Sentiment",
-    caption = "The black line represents the bombing of Pearl Harbor on December 7th, 1941. \n The United States declared war on Japan the next day."
-  ) +
-  scale_x_date(date_breaks = "1 month", date_labels = "%b %Y")
-```
-
-## Row
-
-### Box 3
-
-Talk about the graph here.
-
-### Parameters
-
-```{r}
-#Add code for adjusting data here
-
-```
 
 # Section 3
 ```{r}
