@@ -132,6 +132,40 @@ prepare_data <- function(data = "raw_data.rds") {
     mutate(across(everything(), ~ ifelse(. == "NULL", NA, .))) |>
     mutate(as_date = ymd(date)) |> 
     filter(as_date >= "1941-09-07" & as_date <= "1942-03-07")
+  
+  iso_to_language <- data.frame( 
+    other_language = c("english",
+                       "spanish",
+                       "finnish",
+                       "yiddish",
+                       "german",
+                       "czech",
+                       "croatian",
+                       "polish",
+                       "italian",
+                       "slovenian",
+                       "hungarian",
+                       "romanian",
+                       "japanese"),
+    iso_code = c("en",
+                 "es",
+                 "fi",
+                 "yi",
+                 "de",
+                 "cs",
+                 "hr",
+                 "pl",
+                 "it",
+                 "sl",
+                 "hu",
+                 "ro",
+                 "ja")
+  )
+  
+  pearl_data <- pearl_data |>
+    left_join(iso_to_language, by = "other_language")
+  
   return(pearl_data)
 }
+
 

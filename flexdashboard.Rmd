@@ -16,11 +16,12 @@ library(DT)
 library(igraph)
 library(shinyWidgets)
 source("data_prep.R")
+source("text_analysis.R")
 ```
 
 ```{r import}
 #get_all_years("1941", "1942") commenting out because I don't want to run this every time...
-pearl_data <- prepare_data("pearl_data.rds")
+pearl_data <- prepare_data("Data/pearl_data.rds")
 
 bing_sentiments <- get_sentiments("bing")
 smart_stopwords <- get_stopwords(source = "smart")
@@ -72,19 +73,10 @@ output$filter_ui <- renderUI({
 })
 ```
 
-```{r}
-words <- pearl_data |>
-  mutate(row_id = row_number()) |>
-  unnest_tokens(word, text_data, token = "words") |>
-  filter(str_detect(word, "[a-z]"))  #filter out Hebrew characters and numbers
-
-words_clean <- words |>
-  anti_join(smart_stopwords) |>
-  count(word, sort = TRUE)
-```
-
 ## Column {data-width="500"}
 ```{r}
+words <- tokenize_text(pearl_data, text_column = "text_data")
+words_clean <- remove_stopwords()
 
 words_clean |>
   head(1000) |>
