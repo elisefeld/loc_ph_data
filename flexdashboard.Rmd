@@ -15,6 +15,7 @@ library(tidytext)
 library(DT)
 library(igraph)
 library(shinyWidgets)
+library(ggraph)
 source("data_prep.R")
 source("text_analysis.R")
 ```
@@ -55,7 +56,7 @@ knitr::include_graphics("images/pearl_harbor_front_page.png")
 
 ## Column {data-width="500"}
 ```{r}
-words <- tokenize_words(data = pearl_data, text_column = "text_data")
+words <- tokenize_words(data = pearl_data, text_column = text_data, type = "words")
 words_clean <- remove_stopwords(data = words)
 
 words_clean |>
@@ -114,9 +115,10 @@ Talk about the graph here.
 
 ### Box 1
 ```{r}
-result <- analyze_bing_sentiment(data = words)
+result <- analyze_sentiment(data = words_clean, type = "bing")
 bing <- result[[1]]
 bing_avg <- result[[2]]
+bing_date <- result[[3]]
 
 bing |>
   count(index, sentiment) |>
@@ -135,16 +137,59 @@ bing |>
 ### Box 2
 
 ```{r, echo=FALSE}
-bing_date <- analyze_bing_dates(bing)
-
 ggplot(bing_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment > 0)) +
   geom_col(show.legend = FALSE) +
   theme_minimal() +
+    geom_vline(xintercept = as.Date("1941-12-07"), color = "black") +
   labs(
     title = "Average Newspaper Sentiment Over Time",
     subtitle = "September 7th, 1941 to March 7th, 1942",
     x = "Date",
     y = "Average Sentiment",
+    caption = "The black line represents the bombing of Pearl Harbor on December 7th, 1941. \n The United States declared war on Japan the next day."
+  ) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b %Y")
+
+```
+
+### Box 3
+```{r}
+result <- analyze_sentiment(data = words_clean, type = "afinn")
+afinn <- result[[1]]
+afinn_avg <- result[[2]]
+afinn_date <- result[[3]]
+
+afinn |>
+  group_by(value, word) |>
+  summarize(n = n()) |>
+  arrange(value, desc(n)) |>
+  group_by(value) |>
+  slice_max(n, n = 10) |>
+  ungroup() |>
+  ggplot(aes(reorder(word, n), n, color = before_pearl_harbor)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+facet_wrap( ~ value, scales = "free") +
+  labs(
+    x = "Word",
+    y = "Count",
+    title = "Most Common Words by Sentiment",
+    subtitle = "September 7th, 1941 to March 7th, 1942"
+  )
+
+  
+  
+analyze_afinn_dates(afinn) |>
+  ggplot(aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment > 0)) +
+  geom_col(show.legend = FALSE) +
+  theme_minimal() +
+  geom_vline(xintercept = as.Date("1941-12-07"), color = "black") +
+  labs(
+    title = "Average Newspaper Sentiment Over Time",
+    subtitle = "September 7th, 1941 to March 7th, 1942",
+    x = "Date",
+    y = "Average Sentiment",
+    caption = "The black line represents the bombing of Pearl Harbor on December 7th, 1941. \n The United States declared war on Japan the next day."
   ) +
   scale_x_date(date_breaks = "1 month", date_labels = "%b %Y")
 ```
@@ -163,5 +208,17 @@ Talk about the graph here.
 ```
 
 # Section 3
+```{r}
+ngrams <- tokenize_words(data = pearl_data, text_column = text_data, type = "ngrams")
+ngram_graph <- get_ngrams(ngrams)
+
+set.seed(2017)
+
+ggraph(ngram_graph, layout = "fr") +
+  geom_edge_link() +
+  geom_node_point() +
+  geom_node_text(aes(label = name), vjust = 1, hjust = 1)
+
+```
 
 # Section 4
