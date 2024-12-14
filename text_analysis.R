@@ -169,11 +169,8 @@ find_keywords <- function(data) {
   
 keywords <- bind_rows(lst(misc_keywords, german_keywords, jewish_keywords, aapi_keywords), .id = "id")
 
-keywords_data <- data |>
+get_keywords <- data |>
   inner_join(keywords)
 
 return(keywords_data)
-                
 }
-#Source: https://edsitement.neh.gov/media-resources/asian-american-and-pacific-islander-keywords-chronicling-america
-# https://hmh.org/education/resources/vocabulary-terms-related-holocaust/
