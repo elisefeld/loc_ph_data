@@ -51,7 +51,7 @@ This project was built with flexdashboard and shiny. To view the source code, cl
 
 **Further Reading:**
 
--   More Pearl Harbor front pages [here](https://www.nypl.org/blog/2017/12/07/pearl-harbor-front-page).
+-   See more Pearl Harbor front pages [here](https://www.nypl.org/blog/2017/12/07/pearl-harbor-front-page).
 
 -   [WWII Propaganda: The Influence of Racism](https://cwp.missouri.edu/2012/wwii-propaganda-the-influence-of-racism/)
 
@@ -277,9 +277,9 @@ Keywords were chosen from several resources, including Library of Congress' [Chr
 
 -   Several words related to Japanese people, including Japanese, Japan and the slur "Jap" also increased in frequency dramatically.
 
--   Words relating to German people with neutral sentiment (German, Germans) decreased in sentiment, while derogatory terms for German people and German soliders increased.
+-   Words relating to German people with neutral sentiment (German, Germans) decreased in sentiment, while derogatory terms for German people and German soliders increased *slightly*.
 
--   Most words relating to the Nazi party also decreased in frequency after pearl harbor.
+-   Most words relating to the Nazi party also decreased in frequency after Pearl Harbor.
 
 ## Column
 
@@ -314,7 +314,7 @@ keywords |>
 
 **Insights:**
 
--   Both the Afinn and Bing sentiments were overwhelming negative over the entire time period. This suggests that news that is reported is more often bad than good.
+-   Both the Afinn and Bing sentiments were overwhelmingly negative over the entire time period. This suggests that news that is reported is more often bad than good.
 
 -   Both sentiments also appeared to trend more negative over time.
 
