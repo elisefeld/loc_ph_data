@@ -16,6 +16,7 @@ library(DT)
 library(igraph)
 library(shinyWidgets)
 library(ggraph)
+library(gt)
 source("data_prep.R")
 source("text_analysis.R")
 ```
@@ -164,12 +165,13 @@ words <- tokenize_words(data = pearl_data, text_column = text_data, type = "word
 keywords <- get_keywords(data = words)
 words_clean <- remove_stopwords(data = words)
 
-renderDataTable({
-words_clean |>
-  count(word, sort = TRUE) |>
-  head(1000) |>
-  DT::datatable(options = list(scrollY = 500, 
-                               bPaginate = TRUE)) })
+renderTable({
+  words_clean |>
+    count(word, newspaper_title, sort = TRUE) |>
+    head(100) |>
+    filter(newspaper_title %in% c(input$newspaper_titles)) |>
+    gt()
+})
 ```
 
 Row {.tabset .tabset-fade}
