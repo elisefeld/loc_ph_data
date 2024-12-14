@@ -113,3 +113,67 @@ get_ngrams <- function(data) {
 }
 
 
+
+find_keywords <- function(data) {
+  misc_keywords <- data.frame(word = c("internment",
+                                      "camp",
+                                      "relocation",
+                                      "concentration",
+                                      "outsider",
+                                      "nazi",
+                                      "nazis",
+                                      "hitler",
+                                      "ghetto",
+                                      "swastika",
+                                      "holocaust",
+                                      "extermination",
+                                      "gestapo",
+                                      "fuhrer",
+                                      "gypsy",
+                                      "roma",
+                                      "santi"))
+  
+  
+  german_keywords <- data.frame(word = c("german",
+                                         "germans",
+                                         "german-american",
+                                         "kraut",
+                                         "aryan",
+                                         "hun",
+                                         "heinie",
+                                         "jerry",
+                                         "squarehead",
+                                         "teds"))
+                                         
+  jewish_keywords <- data.frame(word = c("jews",
+                                         "jewish",
+                                         "jew",
+                                         "semite",
+                                         "yiddish",
+                                         "torah",
+                                         "shoah"))
+  
+  aapi_keywords <- data.frame(word = c("japanese",
+                                       "japan",
+                                       "jap",
+                                       "nip",
+                                       "japanese-american",
+                                       "chinaman",
+                                       "oriental",
+                                       "coolie",
+                                       "yellowman",
+                                       "kanaka",
+                                       "hawaii",
+                                       "hawaiian",
+                                       "polynesian"))
+  
+keywords <- bind_rows(lst(misc_keywords, german_keywords, jewish_keywords, aapi_keywords), .id = "id")
+
+keywords_data <- data |>
+  inner_join(keywords)
+
+return(keywords_data)
+                
+}
+#Source: https://edsitement.neh.gov/media-resources/asian-american-and-pacific-islander-keywords-chronicling-america
+# https://hmh.org/education/resources/vocabulary-terms-related-holocaust/
