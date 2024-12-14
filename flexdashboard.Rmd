@@ -247,7 +247,7 @@ keywords |>
   ggplot(aes(reorder(word, n), n), fill = before_pearl_harbor) +
   geom_col() +
   coord_flip() +
-  labs(title = paste0(input$ids, " Keywords \n in Front Pages of Newspapers"),
+  labs(title = paste0(input$ids, " Keywords in Front Pages of Newspapers"),
        subtitle = "September 7th, 1941 to March 7th, 1942",
        x = "Count",
        y = "Keyword") +
