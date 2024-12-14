@@ -216,7 +216,7 @@ Row {.tabset .tabset-fade}
 -------------------------------------
 
 ### Common Words (Bing Sentiment)
-```{r}
+```{r, echo = FALSE}
 result <- analyze_sentiment(data = words_clean, type = "bing")
 bing <- result[[1]]
 bing_avg <- result[[2]]
@@ -244,7 +244,7 @@ facet_wrap( ~ sentiment, scales = "free") +
 ```
 
 ### Common Words (Afinn Sentiment)
-```{r}
+```{r, echo = FALSE}
 result <- analyze_sentiment(data = words_clean, type = "afinn")
 afinn <- result[[1]]
 afinn_avg <- result[[2]]
