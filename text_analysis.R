@@ -4,82 +4,6 @@ library(stopwords)
 library(igraph)
 library(janitor)
 
-Nazi_keywords <- data.frame(word = c("internment",
-                                     "camp",
-                                     "relocation",
-                                     "concentration",
-                                     "outsider",
-                                     "nazi",
-                                     "nazis",
-                                     "hitler",
-                                     "ghetto",
-                                     "swastika",
-                                     "holocaust",
-                                     "extermination",
-                                     "gestapo",
-                                     "fuhrer"))
-
-Roma_keywords <- data.frame(word = c("roma",
-                                     "gypsy",
-                                     "romani",
-                                     "sinti",
-                                     "roma-american",
-                                     "gypsy-american",
-                                     "sinti-american",
-                                     "romani-american"))
-
-
-
-German_keywords <- data.frame(word = c("german",
-                                       "germans",
-                                       "german-american",
-                                       "aryan",
-                                       "kraut",
-                                       "hun",
-                                       "heinie",
-                                       "jerry",
-                                       "squarehead",
-                                       "boche"))
-
-Jewish_keywords <- data.frame(word = c("jews",
-                                       "jewish",
-                                       "jew",
-                                       "hebrew",
-                                       "semite",
-                                       "israelite",
-                                       "yiddish",
-                                       "anti-semitism"))
-
-AAPI_keywords <- data.frame(word = c("japanese",
-                                     "japanese-american",
-                                     "japan",
-                                     "jap",
-                                     "issei",
-                                     "nisei",
-                                     "sansei",
-                                     "yonsei",
-                                     "chinaman",
-                                     "oriental",
-                                     "coolie",
-                                     "yellowman",
-                                     "nipponese",
-                                     "nip",
-                                     "kanaka",
-                                     "hawaii",
-                                     "hawaiian",
-                                     "polynesian"))
-
-Miscellaneous_keywords <- data.frame(word = c("traitor", 
-                                              "spy",
-                                              "saboteur",
-                                              "alien",
-                                              "facist",
-                                              "quisling",
-                                              "enemy"))
-
-
-
-
 tokenize_words <- function(data, text_column, type) {
   data  <- data |>
     mutate(row_id = row_number()) 
@@ -190,21 +114,105 @@ get_ngrams <- function(data) {
 }
 
 
-
-get_keywords <- function(data) {
-  keywords <- bind_rows(list(Nazi_keywords = Nazi_keywords,
-                            German_keywords = German_keywords,
-                            Roma_keywords = Roma_keywords,
-                            Jewish_keywords = Jewish_keywords,
-                            AAPI_keywords = AAPI_keywords,
-                            Miscellaneous_keywords = Miscellaneous_keywords),
-                            .id = "id") # combine all keywords with an id column
+create_keywords <- function() {
+  Nazi_keywords <- data.frame(word = c("internment",
+                                       "camp",
+                                       "relocation",
+                                       "concentration",
+                                       "outsider",
+                                       "nazi",
+                                       "nazis",
+                                       "hitler",
+                                       "ghetto",
+                                       "swastika",
+                                       "holocaust",
+                                       "extermination",
+                                       "gestapo",
+                                       "fuhrer"))
   
+  Roma_keywords <- data.frame(word = c("roma",
+                                       "gypsy",
+                                       "romani",
+                                       "sinti",
+                                       "roma-american",
+                                       "gypsy-american",
+                                       "sinti-american",
+                                       "romani-american"))
+  
+  
+  
+  German_keywords <- data.frame(word = c("german",
+                                         "germans",
+                                         "german-american",
+                                         "aryan",
+                                         "kraut",
+                                         "hun",
+                                         "heinie",
+                                         "jerry",
+                                         "squarehead",
+                                         "boche"))
+  
+  Jewish_keywords <- data.frame(word = c("jews",
+                                         "jewish",
+                                         "jew",
+                                         "hebrew",
+                                         "semite",
+                                         "israelite",
+                                         "yiddish",
+                                         "anti-semitism"))
+  
+  AAPI_keywords <- data.frame(word = c("japanese",
+                                       "japanese-american",
+                                       "japan",
+                                       "jap",
+                                       "issei",
+                                       "nisei",
+                                       "sansei",
+                                       "yonsei",
+                                       "chinaman",
+                                       "oriental",
+                                       "coolie",
+                                       "yellowman",
+                                       "nipponese",
+                                       "nip",
+                                       "kanaka",
+                                       "hawaii",
+                                       "hawaiian",
+                                       "polynesian"))
+  
+  Miscellaneous_keywords <- data.frame(word = c("traitor", 
+                                                "spy",
+                                                "saboteur",
+                                                "alien",
+                                                "facist",
+                                                "quisling",
+                                                "enemy"))
+  
+  keyword_list <- list(Nazi_keywords, German_keywords, Jewish_keywords, AAPI_keywords, Miscellaneous_keywords)
+  
+  return(keyword_list)
+  
+}
+
+get_keywords_list <- function() {
+  keywords_list <- create_keywords()
+  keywords <- bind_rows(list(Nazi_keywords = Nazi_keywords,
+                              German_keywords = German_keywords,
+                              Roma_keywords = Roma_keywords,
+                              Jewish_keywords = Jewish_keywords,
+                              AAPI_keywords = AAPI_keywords,
+                              Miscellaneous_keywords = Miscellaneous_keywords),
+                         .id = "id") # combine all keywords with an id column) # combine all keywords with an id column
+  return(keywords)
+}
+
+get_keywords <- function(data, key_words_list) {
   keywords_data <- data |>
-    inner_join(keywords, by = "word") # add keywords to data
+    inner_join(key_words_list, by = "word") # add keywords to data
   
   keywords_data <- keywords_data |>
     mutate(id = str_remove(id, "_keywords"))
   
   return(keywords_data)
+  
 }

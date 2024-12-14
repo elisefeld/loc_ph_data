@@ -189,7 +189,8 @@ Select a newspaper title from the dropdown menu to see how often the 1000 most c
 ```{r}
 source("text_analysis.R")
 words <- tokenize_words(data = pearl_data, text_column = text_data, type = "words")
-keywords <- get_keywords(data = words)
+keywords_list <- get_keywords_list()
+keywords <- get_keywords(words, keywords_list)
 words_clean <- remove_stopwords(data = words)
 
 inputPanel(
@@ -600,14 +601,15 @@ renderPlot({
 # Keyword Phrases
 
 ## Sidebar {.sidebar}
-
 ```{r}
+keywords_list <- get_keywords_list()
+
 inputPanel(
   selectInput(
-    inputId = "keyword_list",
+    inputId = "keyword_type",
     label = "Select Keywords:",
-    choices = unique(keywords$id),
-    multiple = TRUE))
+    choices = unique(keywords_list$id),
+    multiple = FALSE))
 ```
 
 ## Column
@@ -618,18 +620,9 @@ ngrams_sep <- ngrams |>
   separate(word, into = c("word1", "word2"), sep = " ")
 
 renderDataTable({
-  vector <- input$keyword_list
   bigrams <- ngrams_sep |>
-      select(as_date, word1, word2) |>
-      filter(word1 %in% vector | word2 %in% vector)
-  
-    bigrams |>
+      filter(grepl(input$keyword_type, word1) | grepl(input$keyword_type, word2)) |>
       count(word1, word2, sort = TRUE) |>
-      rename(Word1 = word1, Word2 = word2, Count = n) |> # Rename columns
-      datatable(
-        options = list(
-          pageLength = 50,   
-          autoWidth = TRUE,
-          searching = TRUE))
+    gt()
 })
 ```
