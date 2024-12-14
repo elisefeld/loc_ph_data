@@ -165,6 +165,16 @@ words <- tokenize_words(data = pearl_data, text_column = text_data, type = "word
 keywords <- get_keywords(data = words)
 words_clean <- remove_stopwords(data = words)
 
+inputPanel(
+  pickerInput(
+    inputId = "newspaper_titles",
+    label = "Select Newspaper Title:",
+    choices = unique(words_clean$newspaper_title),
+    multiple = TRUE,
+    options = pickerOptions(actionsBox = TRUE, liveSearch = TRUE)
+))
+
+
 renderTable({
   words_clean |>
     count(word, newspaper_title, sort = TRUE) |>
