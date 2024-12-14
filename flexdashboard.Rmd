@@ -59,7 +59,8 @@ output$datatable <- renderDataTable({
 words_clean |>
   count(word, sort = TRUE) |>
   head(1000) |>
-  DT::datatable(options = list(bPaginate = TRUE)) })
+  DT::datatable(options = list(scrollY = 500, 
+                               bPaginate = TRUE)) })
 
 DT::dataTableOutput("datatable")
 ```
