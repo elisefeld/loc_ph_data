@@ -56,6 +56,7 @@ Overview
 
 Sidebar {.sidebar}
 -------------------------------------
+
 Say some stuff here I guess??
 
 Row {.tabset .tabset-fade}
@@ -158,7 +159,9 @@ Say some stuff here I guess??
 Column {data-width="500"}
 -------------------------------------
 ```{r}
+source("text_analysis.R")
 words <- tokenize_words(data = pearl_data, text_column = text_data, type = "words")
+keywords <- get_keywords(data = words)
 words_clean <- remove_stopwords(data = words)
 
 renderDataTable({
@@ -205,6 +208,70 @@ words_clean |>
   ) +
   facet_wrap(~before_pearl_harbor, scales = "free") +
   theme_minimal()
+```
+
+### AAPI Keywords
+```{r}
+keywords |>
+  filter(id == "aapi_keywords") |>
+  count(word, before_pearl_harbor, sort = TRUE) |>
+  ggplot(aes(reorder(word, n), n)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "Asian American Pacific Islander Keywords \n in Front Pages of Newspapers",
+       subtitle = "September 7th, 1941 to March 7th, 1942",
+       x = "Count",
+       y = "Keyword") +
+  theme_minimal() +
+  facet_wrap(~before_pearl_harbor)
+```
+
+### German Keywords
+```{r}
+keywords |>
+  filter(id == "german_keywords") |>
+  count(word, before_pearl_harbor, sort = TRUE) |>
+  ggplot(aes(reorder(word, n), n)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "German Keywords in Front Pages of Newspapers",
+       subtitle = "September 7th, 1941 to March 7th, 1942",
+       x = "Count",
+       y = "Keyword") +
+  theme_minimal() +
+  facet_wrap(~before_pearl_harbor)
+```
+
+### Jewish Keywords
+```{r}
+keywords |>
+  filter(id == "jewish_keywords") |>
+  count(word, before_pearl_harbor, sort = TRUE) |>
+  ggplot(aes(reorder(word, n), n)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "Jewish Keywords in Front Pages of Newspapers",
+       subtitle = "September 7th, 1941 to March 7th, 1942",
+       x = "Count",
+       y = "Keyword") +
+  theme_minimal() +
+  facet_wrap(~before_pearl_harbor)
+```
+  
+### Miscellaneous Keywords
+```{r}
+keywords |>
+  filter(id == "misc_keywords") |>
+  count(word, before_pearl_harbor, sort = TRUE) |>
+  ggplot(aes(reorder(word, n), n)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "Miscellaneous Keywords in Front Pages of Newspapers",
+       subtitle = "September 7th, 1941 to March 7th, 1942",
+       x = "Count",
+       y = "Keyword") +
+  theme_minimal() +
+  facet_wrap(~before_pearl_harbor)
 ```
 
 Sentiment Analysis
@@ -412,7 +479,6 @@ ggraph(ngram_graph, layout = "fr") +
   geom_node_point() +
   geom_node_text(aes(label = name), vjust = 1, hjust = 1)
 ```
-
 
 
 

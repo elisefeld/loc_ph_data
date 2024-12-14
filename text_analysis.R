@@ -3,6 +3,57 @@ library(tidytext)
 library(stopwords)
 library(igraph)
 
+misc_keywords <- data.frame(word = c("internment",
+                                     "camp",
+                                     "relocation",
+                                     "concentration",
+                                     "outsider",
+                                     "nazi",
+                                     "nazis",
+                                     "hitler",
+                                     "ghetto",
+                                     "swastika",
+                                     "holocaust",
+                                     "extermination",
+                                     "gestapo",
+                                     "fuhrer",
+                                     "gypsy",
+                                     "roma",
+                                     "santi"))
+
+german_keywords <- data.frame(word = c("german",
+                                       "germans",
+                                       "german-american",
+                                       "kraut",
+                                       "aryan",
+                                       "hun",
+                                       "heinie",
+                                       "jerry",
+                                       "squarehead",
+                                       "teds"))
+
+jewish_keywords <- data.frame(word = c("jews",
+                                       "jewish",
+                                       "jew",
+                                       "semite",
+                                       "yiddish",
+                                       "torah",
+                                       "shoah"))
+
+aapi_keywords <- data.frame(word = c("japanese",
+                                     "japan",
+                                     "jap",
+                                     "nip",
+                                     "japanese-american",
+                                     "chinaman",
+                                     "oriental",
+                                     "coolie",
+                                     "yellowman",
+                                     "kanaka",
+                                     "hawaii",
+                                     "hawaiian",
+                                     "polynesian"))
+
 tokenize_words <- function(data, text_column, type) {
   data  <- data |>
     mutate(row_id = row_number())
@@ -114,63 +165,15 @@ get_ngrams <- function(data) {
 
 
 
-find_keywords <- function(data) {
-  misc_keywords <- data.frame(word = c("internment",
-                                      "camp",
-                                      "relocation",
-                                      "concentration",
-                                      "outsider",
-                                      "nazi",
-                                      "nazis",
-                                      "hitler",
-                                      "ghetto",
-                                      "swastika",
-                                      "holocaust",
-                                      "extermination",
-                                      "gestapo",
-                                      "fuhrer",
-                                      "gypsy",
-                                      "roma",
-                                      "santi"))
+get_keywords <- function(data) {
+  keywords <- bind_rows(list(misc_keywords = misc_keywords,
+                            german_keywords = german_keywords,
+                            jewish_keywords = jewish_keywords,
+                            aapi_keywords = aapi_keywords),
+                            .id = "id")
   
+  keywords_data <- data |>
+    inner_join(keywords, by = "word")
   
-  german_keywords <- data.frame(word = c("german",
-                                         "germans",
-                                         "german-american",
-                                         "kraut",
-                                         "aryan",
-                                         "hun",
-                                         "heinie",
-                                         "jerry",
-                                         "squarehead",
-                                         "teds"))
-                                         
-  jewish_keywords <- data.frame(word = c("jews",
-                                         "jewish",
-                                         "jew",
-                                         "semite",
-                                         "yiddish",
-                                         "torah",
-                                         "shoah"))
-  
-  aapi_keywords <- data.frame(word = c("japanese",
-                                       "japan",
-                                       "jap",
-                                       "nip",
-                                       "japanese-american",
-                                       "chinaman",
-                                       "oriental",
-                                       "coolie",
-                                       "yellowman",
-                                       "kanaka",
-                                       "hawaii",
-                                       "hawaiian",
-                                       "polynesian"))
-  
-keywords <- bind_rows(lst(misc_keywords, german_keywords, jewish_keywords, aapi_keywords), .id = "id")
-
-get_keywords <- data |>
-  inner_join(keywords)
-
-return(keywords_data)
+  return(keywords_data)
 }
