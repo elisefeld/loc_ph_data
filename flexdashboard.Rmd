@@ -57,7 +57,7 @@ Overview
 
 Sidebar {.sidebar}
 -------------------------------------
-
+Say some stuff here I guess??
 
 Row {.tabset .tabset-fade}
 -------------------------------------
@@ -150,7 +150,6 @@ inputPanel(
     options = pickerOptions(actionsBox = TRUE, liveSearch = TRUE)
 ))
 
-
 renderTable({
   words_clean |>
     count(word, newspaper_title, sort = TRUE) |>
@@ -203,10 +202,6 @@ Keywords
 
 Sidebar {.sidebar}
 -------------------------------------
-Say some stuff here I guess??
-
-Column
--------------------------------------
 ```{r}
 inputPanel(
   pickerInput(
@@ -216,7 +211,11 @@ inputPanel(
     multiple = TRUE,
     options = pickerOptions(actionsBox = TRUE, liveSearch = TRUE)
 ))
+```
 
+Column
+-------------------------------------
+```{r}
 renderPlot({
 keywords |>
   filter(id %in% c(input$ids)) |>
@@ -377,7 +376,6 @@ Column {data-width="400"}
 ### Box 1
 
 ```{r eruptions, echo=FALSE}
-#IDK How to fix this???
 renderPlot({
   data <- words |>
     inner_join(nrc, by = "word") |>
