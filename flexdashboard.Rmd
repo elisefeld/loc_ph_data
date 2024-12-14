@@ -44,7 +44,6 @@ The data was accessed through the Chronicling America API using the [httr2](http
 View some more Pearl Harbor front pages [here](https://www.nypl.org/blog/2017/12/07/pearl-harbor-front-page).
 
 ## Column {data-width="500"}
-
 ```{r picture, echo = F, out.width = '100%'}
 knitr::include_graphics("images/pearl_harbor_front_page.png")
 ```
@@ -68,7 +67,6 @@ Insights:
 ## Column {.tabset .tabset-fade}
 
 ### By Language
-
 ```{r}
 pearl_data |>
   filter(!is.na(language)) |>
@@ -85,7 +83,6 @@ pearl_data |>
 ```
 
 ### By Language and State
-
 ```{r}
 pearl_data |>
   filter(!is.na(language)) |>
@@ -103,7 +100,6 @@ pearl_data |>
 ```
 
 ### By Ethnicity
-
 ```{r}
 pearl_data |>
   filter(!is.na(ethnicity)) |>
@@ -119,7 +115,6 @@ pearl_data |>
 ```
 
 ### By Newspaper
-
 ```{r}
 pearl_data |>
   filter(!is.na(newspaper)) |>
@@ -136,7 +131,6 @@ pearl_data |>
 ```
 
 ### By Subject
-
 ```{r}
 data_subjects <- pearl_data |>
   unnest(subject) 
@@ -166,7 +160,6 @@ data_subjects |>
 Select a newspaper title from the dropdown menu to see how often the 1000 most common words appeared in the front pages of the selected newspaper.
 
 ## Column {data-width="500"}
-
 ```{r}
 source("text_analysis.R")
 words <- tokenize_words(data = pearl_data, text_column = text_data, type = "words")
@@ -194,7 +187,6 @@ renderTable({
 ## Row {.tabset .tabset-fade}
 
 ### Common Words
-
 ```{r}
 words_clean |>
   count(word, sort = TRUE) |>
@@ -210,7 +202,6 @@ words_clean |>
 ```
 
 ### Before and After Pearl Harbor
-
 ```{r}
 words_clean |>
   count(word, before_pearl_harbor, sort = TRUE) |>
@@ -249,7 +240,6 @@ inputPanel(
 ```
 
 ## Column
-
 ```{r}
 renderPlot({
 keywords |>
@@ -270,7 +260,6 @@ keywords |>
 # Sentiment Analysis
 
 ## Sidebar {.sidebar}
-
 -   The Bing Sentiment Lexicon ranges from -1 to 1, with -1 being the most negative and 1 being the most positive.
 
 -   The Afinn Sentiment Lexicon ranges from -5 to 5, with -5 being the most negative and 5 being the most positive.
@@ -280,7 +269,6 @@ keywords |>
 ## Row {.tabset .tabset-fade}
 
 ### Common Words (Bing Sentiment)
-
 ```{r, echo = FALSE}
 result <- analyze_sentiment(data = words_clean, type = "bing")
 bing <- result[[1]]
@@ -309,7 +297,6 @@ facet_wrap( ~ sentiment, scales = "free") +
 ```
 
 ### Common Words (Afinn Sentiment)
-
 ```{r, echo = FALSE}
 result <- analyze_sentiment(data = words_clean, type = "afinn")
 afinn <- result[[1]]
@@ -337,7 +324,6 @@ facet_wrap( ~ value, scales = "free") +
 ```
 
 ### NRC Sentiment
-
 ```{r}
 nrc <- get_sentiments("nrc")
 words |>
@@ -362,7 +348,6 @@ ggplot(aes(x = reorder(word, n), y = n, fill = sentiment)) +
 ## Row {.tabset .tabset-fade}
 
 ### Bing Sentiment Over Time
-
 ```{r, echo=FALSE}
 ggplot(bing_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment > 0)) +
   geom_col(show.legend = FALSE) +
@@ -380,7 +365,6 @@ ggplot(bing_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment
 ```
 
 ### Afinn Sentiment Over Time
-
 ```{r}
 result <- analyze_sentiment(data = words_clean, type = "afinn")
 afinn <- result[[1]]
@@ -404,7 +388,6 @@ ggplot(afinn_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentimen
 # Publishers and Sentiment
 
 ## Column {data-width="400"}
-
 ```{r}
 selectInput(inputId = "state_selector",
             label = "Select State:",
@@ -456,7 +439,6 @@ selectInput(inputId = "sentiment_selector",
 ```
 
 ## Plot
-
 ```{r, echo=FALSE}
 renderPlot({
   selected_state <- str_to_lower(input$state_selector)
@@ -516,7 +498,6 @@ If there is no data for a given combination of "State" and "Sentiment", no plot 
 # Common Phrases
 
 ## Column {data-width="300"}
-
 ```{r}
 dateRangeInput(
     inputId = "date_selector",
@@ -532,8 +513,7 @@ This section creates a network graph of commonly occurring phrases from the text
 
 Select the dates for which you would like to see, and a plot will generate to the right.
 
-## Column {data-width="600"}
-
+## Column
 ```{r}
 ngrams <- tokenize_words(data = pearl_data, text_column = text_data, type = "ngrams")
 
@@ -557,5 +537,43 @@ renderPlot({
     geom_edge_link() +
     geom_node_point() +
     geom_node_text(aes(label = name), vjust = 1, hjust = 1)
+})
+```
+
+
+# Keyword Phrases
+
+## Sidebar {.sidebar}
+
+```{r}
+inputPanel(
+  pickerInput(
+    inputId = "keyword_list",
+    label = "Select Keywords:",
+    choices = unique(keywords$id),
+    multiple = TRUE,
+    options = pickerOptions(actionsBox = TRUE, liveSearch = TRUE)))
+```
+
+## Column
+```{r}
+ngrams_sep <- ngrams |>
+  separate(word, into = c("word1", "word2"), sep = " ")
+
+renderDataTable({
+  selected_keywords <- as.character(unlist(AAPI_keywords$word))
+  bigrams <- ngrams_sep |>
+      select(as_date, word1, word2) |>
+      filter(word1 %in% selected_keywords | word2 %in% selected_keywords)
+  
+    bigrams |>
+      count(word1, word2, sort = TRUE) |>
+      rename(Word1 = word1, Word2 = word2, Count = n) |> # Rename columns
+      head(100) |>
+      datatable(
+        options = list(
+          pageLength = 100,   
+          autoWidth = TRUE,
+          searching = TRUE))
 })
 ```
