@@ -133,7 +133,8 @@ prepare_data <- function(data = "raw_data.rds") {
     mutate(as_date = ymd(date)) |> 
     filter(as_date >= "1941-09-07" & as_date <= "1942-03-07") |>
     mutate(before_pearl_harbor = ifelse(as_date < "1941-12-07", "Before Pearl Harbor", "After Pearl Harbor"),
-           paper_title = str_remove_all(newspaper_title, "\\(.*"))
+          newspaper_name = str_remove(newspaper_title, " \\(.*"),
+          newspaper_name = str_trim(newspaper_name))
   
   iso_to_language <- data.frame( 
     other_language = c("english",
