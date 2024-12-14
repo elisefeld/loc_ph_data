@@ -33,7 +33,7 @@ pearl_data <- prepare_data(data = "Data/pearl_data.rds")
 
 By [Elise Hachfeld](https://github.com/elisefeld) and [Theresa Worden](https://github.com/wordentheresa0)
 
-The way people consume media has changed drastically since 1941, but has its content? We are interested in how major historical events affect the sentiment of people reflected in the media. To investigate this, we looked at the text of newspapers 3 months before and after the bombing of Pearl Harbor on December 7th, 1941.
+The way people consume media has changed drastically since 1941, but has its content? We are interested in how major historical events affect the sentiment of people reflected in the media. To investigate this, we looked at the text of newspapers 3 months before and after the bombing of Pearl Harbor on December 7th, 1941 (from September 7th 1941 to March 7th, 1942.)
 
 We sourced our data from the Library of Congress [Chronicling America](https://www.loc.gov/collections/chronicling-america/about-this-collection/) project, which contains historical American newspapers from 1756 to 1963.
 
@@ -48,6 +48,63 @@ knitr::include_graphics("images/pearl_harbor_front_page.png")
 ```
 
 
+# Overview
+
+## Row {.tabset .tabset-fade}
+
+### By Language
+```{r}
+#Can we make this filterable?
+pearl_data |>
+  count(other_language, state) |>
+  filter(other_language != "NA") |>
+  ggplot(aes(reorder(other_language, n), n), fill = other_language) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "Number of Articles by Language",
+       subtitle = "September 7th, 1941 to March 7th, 1942",
+       x = "Language",
+       y = "Count") +
+  facet_wrap(~state) +
+  theme_minimal()
+```
+
+### By Ethnicity
+```{r}
+pearl_data |>
+  filter(!is.na(subject_ethnicity)) |>
+  count(subject_ethnicity) |>
+  ggplot(aes(reorder(subject_ethnicity, n), n)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "Number of Articles by Ethnicity",
+       subtitle = "September 7th, 1941 to March 7th, 1942",
+       x = "Ethnicity",
+       y = "Count") +
+  theme_minimal()
+```
+
+### By Newspaper
+```{r}
+#How can we show this properly? also filter by state?
+print(unique(pearl_data$newspaper_title))
+pearl_data |>
+  count(newspaper_title) |>
+  ggplot(aes(reorder(newspaper_title, n), n)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "Number of Articles by Newspaper",
+       subtitle = "September 7th, 1941 to March 7th, 1942",
+       x = "Newspaper",
+       y = "Count") +
+  theme_minimal()
+```
+
+## Row {data-height="200"}
+```{r}
+#Describe here
+```
+
 # Common Words
 
 ## Column {data-width="500"}
@@ -59,13 +116,28 @@ output$datatable <- renderDataTable({
 words_clean |>
   count(word, sort = TRUE) |>
   head(1000) |>
+<<<<<<< HEAD
   DT::datatable(options = list(scrollY = 500, 
                                bPaginate = TRUE)) })
+=======
+  DT::datatable(options = list(bPaginate = TRUE, pageLength = 25)) })
+>>>>>>> 57e1f2c (adding more graphs)
 
 DT::dataTableOutput("datatable")
+
+output$datatable2 <- renderDataTable({
+words_clean |>
+  count(word, newspaper_title, sort = TRUE) |>
+  head(1000) |>
+  DT::datatable(options = list(bPaginate = TRUE, pageLength = 25, scrollY = 500)) })
+    
+DT::dataTableOutput("datatable2")
+
 ```
 
-## Column {data-width="500"}
+## Row {.tabset .tabset-fade}
+
+### Common Words
 ```{r}
 words_clean |>
   count(word, sort = TRUE) |>
@@ -76,14 +148,29 @@ words_clean |>
   labs(title = "Most Common Words in Front Pages of Newspapers",
        subtitle = "September 7th, 1941 to March 7th, 1942",
        x = "Count",
-       y = "Word")
-
-#ggraph(ngram_filter_graph, layout = "fr") +
-#  geom_edge_link() +
-#  geom_node_point() +
-#  geom_node_text(aes(label = name), vjust = 1, hjust = 1)
+       y = "Word") +
+  theme_minimal()
 ```
 
+### Before and After Pearl Harbor
+```{r}
+words_clean |>
+  count(word, before_pearl_harbor, sort = TRUE) |>
+  group_by(before_pearl_harbor) |>
+  slice_max(n, n = 20) |>
+  ungroup() |>
+  ggplot(aes(fct_reorder(word, n), n, fill = before_pearl_harbor)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  labs(
+    title = "Common Words Before and After Pearl Harbor",
+    subtitle = "December 7th, 1941",
+    x = "Word",
+    y = "Count"
+  ) +
+  facet_wrap(~before_pearl_harbor, scales = "free") +
+  theme_minimal()
+```
 
 # Sentiment Analysis
 
@@ -112,25 +199,8 @@ facet_wrap( ~ sentiment, scales = "free") +
     y = "Count",
     title = "Most Common Words by Bing Sentiment",
     subtitle = "Based on the Bing Sentiment Lexicon"
-  )
-
-```
-
-### Bing Sentiment Over Time
-
-```{r, echo=FALSE}
-ggplot(bing_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment > 0)) +
-  geom_col(show.legend = FALSE) +
-  theme_minimal() +
-    geom_vline(xintercept = as.Date("1941-12-07"), color = "black") +
-  labs(
-    title = "Average Bing Sentiment Over Time",
-    subtitle = "Based on the Bing Sentiment Lexicon",
-    x = "Date",
-    y = "Average Sentiment",
-    caption = "The black line represents the bombing of Pearl Harbor on December 7th, 1941. \n The United States declared war on Japan the next day."
   ) +
-  scale_x_date(date_breaks = "1 month", date_labels = "%b %Y")
+  theme_minimal()
 
 ```
 
@@ -157,29 +227,8 @@ facet_wrap( ~ value, scales = "free") +
     y = "Count",
     title = "Most Common Words by Sentiment",
     subtitle = "Based on the Afinn Sentiment Lexicon"
-  )
-```
-
-### Afinn Sentiment Over Time
-```{r}
-result <- analyze_sentiment(data = words_clean, type = "afinn")
-afinn <- result[[1]]
-afinn_avg <- result[[2]]
-afinn_date <- result[[3]]
-
-ggplot(afinn_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment > 0)) +
-  geom_col(show.legend = FALSE) +
-  theme_minimal() +
-    geom_vline(xintercept = as.Date("1941-12-07"), color = "black") +
-  labs(
-    title = "Average Afinn Sentiment Over Time",
-    subtitle = "Based on the Afinn Sentiment Lexicon",
-    x = "Date",
-    y = "Average Sentiment",
-    caption = "The black line represents the bombing of Pearl Harbor on December 7th, 1941. \n The United States declared war on Japan the next day."
   ) +
-  scale_x_date(date_breaks = "1 month", date_labels = "%b %Y")
-
+  theme_minimal()
 ```
 
 ### NRC Sentiment
@@ -204,12 +253,49 @@ ggplot(aes(x = reorder(word, n), y = n, fill = sentiment)) +
   theme_minimal()
 ```
 
-## Row
 
-### Box 3
+## Row {.tabset .tabset-fade}
 
-Talk about the graph here.
+### Bing Sentiment Over Time
 
+```{r, echo=FALSE}
+ggplot(bing_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment > 0)) +
+  geom_col(show.legend = FALSE) +
+    geom_vline(xintercept = as.Date("1941-12-07"), color = "black") +
+  labs(
+    title = "Average Bing Sentiment Over Time",
+    subtitle = "Based on the Bing Sentiment Lexicon",
+    x = "Date",
+    y = "Average Sentiment",
+    caption = "The black line represents the bombing of Pearl Harbor on December 7th, 1941. \n The United States declared war on Japan the next day."
+  ) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b %Y") +
+  theme_minimal()
+
+```
+
+### Afinn Sentiment Over Time
+```{r}
+result <- analyze_sentiment(data = words_clean, type = "afinn")
+afinn <- result[[1]]
+afinn_avg <- result[[2]]
+afinn_date <- result[[3]]
+
+ggplot(afinn_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment > 0)) +
+  geom_col(show.legend = FALSE) +
+    geom_vline(xintercept = as.Date("1941-12-07"), color = "black") +
+  labs(
+    title = "Average Afinn Sentiment Over Time",
+    subtitle = "Based on the Afinn Sentiment Lexicon",
+    x = "Date",
+    y = "Average Sentiment",
+    caption = "The black line represents the bombing of Pearl Harbor on December 7th, 1941. \n The United States declared war on Japan the next day."
+  ) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b %Y") +
+  theme_minimal()
+```
+
+## Column {data-width="400"}
 ### Parameters
 
 ```{r}
@@ -275,6 +361,6 @@ ggraph(ngram_graph, layout = "fr") +
   geom_node_point() +
   geom_node_text(aes(label = name), vjust = 1, hjust = 1)
 
-```
 
-# Section 4
+
+```

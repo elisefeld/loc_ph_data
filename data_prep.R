@@ -132,7 +132,7 @@ prepare_data <- function(data = "raw_data.rds") {
     mutate(across(everything(), ~ ifelse(. == "NULL", NA, .))) |>
     mutate(as_date = ymd(date)) |> 
     filter(as_date >= "1941-09-07" & as_date <= "1942-03-07") |>
-    mutate(before_pearl_harbor = ifelse(as_date < "1941-12-07", "yes", "no"))
+    mutate(before_pearl_harbor = ifelse(as_date < "1941-12-07", "Before Pearl Harbor", "After Pearl Harbor"))
   
   iso_to_language <- data.frame( 
     other_language = c("english",
