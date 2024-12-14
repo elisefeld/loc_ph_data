@@ -54,17 +54,20 @@ aapi_keywords <- data.frame(word = c("japanese",
                                      "hawaiian",
                                      "polynesian"))
 
+
+
+
 tokenize_words <- function(data, text_column, type) {
   data  <- data |>
-    mutate(row_id = row_number())
+    mutate(row_id = row_number()) 
   
     if (type == "ngrams") {
       tokenized <- data |>
-        unnest_tokens(word, {{ text_column }}, token = type, n = 2)
+        unnest_tokens(word, {{ text_column }}, token = type, n = 2) # tokenize groups of 2
     } 
     if (type == "words") {
       tokenized <- data |>
-        unnest_tokens(word, {{ text_column }}, token = type)
+        unnest_tokens(word, {{ text_column }}, token = type) # tokenize single words
     } 
   
   tokenized <- tokenized |>
@@ -81,7 +84,7 @@ remove_stopwords <- function(data) {
   
   # Removing English Stop Words
   data <- data |>
-    anti_join(smart_stopwords, by = "word")
+    anti_join(smart_stopwords, by = "word") 
   
   english <- data |>
     filter(!(data$iso_code %in% supported_languages) | is.na(data$iso_code))
@@ -107,7 +110,7 @@ analyze_sentiment <- function(data, type) {
   sentiments <- get_sentiments(type)
   
   sentiment <- data |>
-    inner_join(sentiments, by = "word")
+    inner_join(sentiments, by = "word") # add sentiments to data
     
   if (type == "bing") {
     # Average Bing Sentiment by Paper
@@ -150,11 +153,12 @@ analyze_sentiment <- function(data, type) {
 
 get_ngrams <- function(data) {
   stop_words <- get_stopwords(source = "smart")
-  ngram_filter <- data |>
-    separate(word, c("word1", "word2"), sep = " ") |>
-    filter(!word1 %in% stop_words$word,
+  
+  ngram_filter <- data |> 
+    separate(word, c("word1", "word2"), sep = " ") |> # separate words into two columns
+    filter(!word1 %in% stop_words$word, # filter out stopwords
            !word2 %in% stop_words$word) |>
-    count(word1, word2, sort = TRUE)
+    count(word1, word2, sort = TRUE) # count the number of times each ngram appears
   
   ngram_filter_graph <- ngram_filter |>
     filter(n > 2) |>
@@ -170,10 +174,10 @@ get_keywords <- function(data) {
                             german_keywords = german_keywords,
                             jewish_keywords = jewish_keywords,
                             aapi_keywords = aapi_keywords),
-                            .id = "id")
+                            .id = "id") # combine all keywords with an id column
   
   keywords_data <- data |>
-    inner_join(keywords, by = "word")
+    inner_join(keywords, by = "word") # add keywords to data
   
   return(keywords_data)
 }
