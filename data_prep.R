@@ -8,19 +8,19 @@ base_url <- "https://www.loc.gov/collections/chronicling-america/"
 final_results <- data.frame()
 
 iso_to_language <- data.frame( 
-  other_language = c("english",
-                     "spanish",
-                     "finnish",
-                     "yiddish",
-                     "german",
-                     "czech",
-                     "croatian",
-                     "polish",
-                     "italian",
-                     "slovenian",
-                     "hungarian",
-                     "romanian",
-                     "japanese"),
+  language = c("english",
+               "spanish",
+               "finnish",
+               "yiddish",
+               "german",
+               "czech",
+               "croatian",
+               "polish",
+               "italian",
+               "slovenian",
+               "hungarian",
+               "romanian",
+               "japanese"),
   iso_code = c("en",
                "es",
                "fi",
@@ -158,17 +158,17 @@ prepare_data <- function(data = "raw_data.rds") {
            text_data = description,
            state = location_state,
            city = location_city,
-           other_language = language) |>
+           ethnicity = subject_ethnicity) |>
     mutate(across(everything(), ~ ifelse(. == "", NA, .))) |> # replace empty strings with NA
     mutate(across(everything(), ~ ifelse(. == "NULL", NA, .))) |> # replace NULL with NA
     mutate(as_date = ymd(date)) |> # convert date to date format
     filter(as_date >= "1941-09-07" & as_date <= "1942-03-07") |> # filter by date range
     mutate(before_pearl_harbor = ifelse(as_date < "1941-12-07", "Before Pearl Harbor", "After Pearl Harbor"), # create a new column for before or after Pearl Harbor
-          newspaper_name = str_remove(newspaper_title, " \\(.*"), # remove anything after parentheses from the newspaper title
-          newspaper_name = str_trim(newspaper_name)) 
+          newspaper = str_remove(newspaper_title, " \\(.*"), # remove anything after parentheses from the newspaper title
+          newspaper = str_trim(newspaper)) 
   
   pearl_data <- pearl_data |>
-    left_join(iso_to_language, by = "other_language") # join in the iso codes
+    left_join(iso_to_language, by = "language") # join in the iso codes
   
   return(pearl_data)
 }

@@ -65,10 +65,10 @@ Row {.tabset .tabset-fade}
 ### By Language
 ```{r}
 pearl_data |>
-  filter(!is.na(other_language)) |>
-  count(other_language, sort = TRUE) |>
-  filter(other_language != "NA") |>
-  ggplot(aes(reorder(other_language, n), n), fill = other_language) +
+  filter(!is.na(language)) |>
+  count(language, sort = TRUE) |>
+  filter(language != "NA") |>
+  ggplot(aes(reorder(language, n), n), fill = language) +
   geom_col() +
   coord_flip() +
   labs(title = "Number of Articles by Language",
@@ -82,10 +82,10 @@ pearl_data |>
 ```{r}
 #Can we make this filterable?
 pearl_data |>
-  filter(!is.na(other_language)) |>
-  count(other_language, state, sort = TRUE) |>
-  filter(other_language != "NA") |>
-  ggplot(aes(reorder(other_language, n), n), fill = other_language) +
+  filter(!is.na(language)) |>
+  count(language, state, sort = TRUE) |>
+  filter(language != "NA") |>
+  ggplot(aes(reorder(language, n), n), fill = language) +
   geom_col() +
   coord_flip() +
   labs(title = "Number of Articles by Language and State",
@@ -99,9 +99,9 @@ pearl_data |>
 ### By Ethnicity
 ```{r}
 pearl_data |>
-  filter(!is.na(subject_ethnicity)) |>
-  count(subject_ethnicity, sort = TRUE) |>
-  ggplot(aes(reorder(subject_ethnicity, n), n)) +
+  filter(!is.na(ethnicity)) |>
+  count(ethnicity, sort = TRUE) |>
+  ggplot(aes(reorder(ethnicity, n), n)) +
   geom_col() +
   coord_flip() +
   labs(title = "Number of Articles by Ethnicity",
@@ -114,37 +114,14 @@ pearl_data |>
 ### By Newspaper
 ```{r}
 pearl_data |>
-  count(newspaper_name, sort = TRUE) |>
+  count(newspaper, sort = TRUE) |>
   slice_head(n = 25) |>
-  ggplot(aes(factor(reorder(newspaper_name, n)), n)) +
+  ggplot(aes(factor(reorder(newspaper, n)), n)) +
   geom_col() +
   coord_flip() +
   labs(title = "Number of Articles by Newspaper",
        subtitle = "September 7th, 1941 to March 7th, 1942",
        x = "Newspaper",
-       y = "Count") +
-  theme_minimal()
-```
-
-### By Subject
-```{r}
-data_subjects <- pearl_data |>
-  unnest(subject) 
-
-subjects <- data_subjects |>
-  distinct(subject) |>
-  pull(subject)
-
-data_subjects |>
-  count(subject, sort = TRUE) |>
-  filter(subject != "united states" & subject != "newspapers") |>
-  slice_head(n = 25) |>
-  ggplot(aes(reorder(subject, n), n)) +
-  geom_col() +
-  coord_flip() +
-  labs(title = "Number of Articles by Subject",
-       subtitle = "September 7th, 1941 to March 7th, 1942",
-       x = "Subject",
        y = "Count") +
   theme_minimal()
 ```
@@ -440,7 +417,7 @@ Column {data-width="300"}
 Talk about the graph here.
 
 
-Ngrams
+ngrams
 ===================================== 
 
 Sidebar {.sidebar}
