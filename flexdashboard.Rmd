@@ -25,9 +25,11 @@ source("text_analysis.R")
 pearl_data <- prepare_data(data = "Data/pearl_data.rds")
 ```
 
-# About
+About
+=====================================  
 
-## Column {data-width="500"}
+Column {data-width="500"}
+-------------------------------------
 
 ### Background
 
@@ -41,16 +43,23 @@ The data was accessed through the Chronicling America API using the [httr2](http
 
 View some more Pearl Harbor front pages [here](https://www.nypl.org/blog/2017/12/07/pearl-harbor-front-page).
 
-## Column {data-width="500"}
+Column {data-width="500"}
+-------------------------------------
 
 ```{r picture, echo = F, out.width = '100%'}
 knitr::include_graphics("images/pearl_harbor_front_page.png")
 ```
 
 
-# Overview
+Overview
+=====================================
 
-## Row {.tabset .tabset-fade}
+Sidebar {.sidebar}
+-------------------------------------
+Say some stuff here I guess??
+
+Row {.tabset .tabset-fade}
+-------------------------------------
 
 ### By Language
 ```{r}
@@ -100,14 +109,15 @@ pearl_data |>
   theme_minimal()
 ```
 
-## Row {data-height="200"}
-```{r}
-#Describe here
-```
+Common Words
+=====================================
 
-# Common Words
+Sidebar {.sidebar}
+-------------------------------------
+Say some stuff here I guess??
 
-## Column {data-width="500"}
+Column {data-width="500"}
+-------------------------------------
 ```{r}
 words <- tokenize_words(data = pearl_data, text_column = text_data, type = "words")
 words_clean <- remove_stopwords(data = words)
@@ -116,12 +126,8 @@ output$datatable <- renderDataTable({
 words_clean |>
   count(word, sort = TRUE) |>
   head(1000) |>
-<<<<<<< HEAD
   DT::datatable(options = list(scrollY = 500, 
                                bPaginate = TRUE)) })
-=======
-  DT::datatable(options = list(bPaginate = TRUE, pageLength = 25)) })
->>>>>>> 57e1f2c (adding more graphs)
 
 DT::dataTableOutput("datatable")
 
@@ -135,7 +141,8 @@ DT::dataTableOutput("datatable2")
 
 ```
 
-## Row {.tabset .tabset-fade}
+Row {.tabset .tabset-fade}
+-------------------------------------
 
 ### Common Words
 ```{r}
@@ -172,9 +179,15 @@ words_clean |>
   theme_minimal()
 ```
 
-# Sentiment Analysis
+Sentiment Analysis
+=====================================  
 
-## Row {.tabset .tabset-fade}
+Sidebar {.sidebar}
+-------------------------------------
+Say some stuff here I guess??
+
+Row {.tabset .tabset-fade}
+-------------------------------------
 
 ### Common Words (Bing Sentiment)
 ```{r}
@@ -254,7 +267,8 @@ ggplot(aes(x = reorder(word, n), y = n, fill = sentiment)) +
 ```
 
 
-## Row {.tabset .tabset-fade}
+Row {.tabset .tabset-fade}
+-------------------------------------
 
 ### Bing Sentiment Over Time
 
@@ -295,17 +309,16 @@ ggplot(afinn_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentimen
   theme_minimal()
 ```
 
-## Column {data-width="400"}
-### Parameters
+Section
+===================================== 
 
-```{r}
-#Add code for adjusting data here
+Sidebar {.sidebar}
+-------------------------------------
+Say some stuff here I guess??
 
-```
 
-# Section
-
-## Column {data-width="400"}
+Column {data-width="400"}
+-------------------------------------
 
 ### Box 1
 
@@ -342,14 +355,24 @@ pickerInput(inputId = "state_selector",
             options = pickerOptions(actionsBox = TRUE, liveSearch = TRUE))
 ```
 
-## Column {data-width="300"}
+Column {data-width="300"}
+-------------------------------------
 
 ### Box 3
 
 Talk about the graph here.
 
 
-# Section 3
+Ngrams
+===================================== 
+
+Sidebar {.sidebar}
+-------------------------------------
+Say some stuff here I guess??
+
+Column {data-width="300"}
+-------------------------------------
+
 ```{r}
 ngrams <- tokenize_words(data = pearl_data, text_column = text_data, type = "ngrams")
 ngram_graph <- get_ngrams(ngrams)
