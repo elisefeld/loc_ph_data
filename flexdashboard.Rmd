@@ -597,32 +597,3 @@ renderPlot({
     geom_node_text(aes(label = name), vjust = 1, hjust = 1)
 })
 ```
-
-# Keyword Phrases
-
-## Sidebar {.sidebar}
-```{r}
-keywords_list <- get_keywords_list()
-
-inputPanel(
-  selectInput(
-    inputId = "keyword_type",
-    label = "Select Keywords:",
-    choices = unique(keywords_list$id),
-    multiple = FALSE))
-```
-
-## Column
-
-```{r}
-#Fix the height on this
-ngrams_sep <- ngrams |>
-  separate(word, into = c("word1", "word2"), sep = " ")
-
-renderDataTable({
-  bigrams <- ngrams_sep |>
-      filter(grepl(input$keyword_type, word1) | grepl(input$keyword_type, word2)) |>
-      count(word1, word2, sort = TRUE) |>
-    gt()
-})
-```

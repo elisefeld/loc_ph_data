@@ -113,8 +113,7 @@ get_ngrams <- function(data) {
   return(ngram_filter_graph)
 }
 
-
-create_keywords <- function() {
+get_keywords_list <- function() {
   Nazi_keywords <- data.frame(word = c("internment",
                                        "camp",
                                        "relocation",
@@ -188,14 +187,6 @@ create_keywords <- function() {
                                                 "quisling",
                                                 "enemy"))
   
-  keyword_list <- list(Nazi_keywords, German_keywords, Jewish_keywords, AAPI_keywords, Miscellaneous_keywords)
-  
-  return(keyword_list)
-  
-}
-
-get_keywords_list <- function() {
-  keywords_list <- create_keywords()
   keywords <- bind_rows(list(Nazi_keywords = Nazi_keywords,
                               German_keywords = German_keywords,
                               Roma_keywords = Roma_keywords,
