@@ -33,35 +33,49 @@ Roma_keywords <- data.frame(word = c("roma",
 German_keywords <- data.frame(word = c("german",
                                        "germans",
                                        "german-american",
-                                       "kraut",
                                        "aryan",
+                                       "kraut",
                                        "hun",
                                        "heinie",
                                        "jerry",
                                        "squarehead",
-                                       "teds"))
+                                       "boche"))
 
 Jewish_keywords <- data.frame(word = c("jews",
                                        "jewish",
                                        "jew",
+                                       "hebrew",
                                        "semite",
+                                       "israelite",
                                        "yiddish",
-                                       "torah",
-                                       "shoah"))
+                                       "anti-semitism"))
 
 AAPI_keywords <- data.frame(word = c("japanese",
+                                     "japanese-american",
                                      "japan",
                                      "jap",
-                                     "nip",
-                                     "japanese-american",
+                                     "issei",
+                                     "nisei",
+                                     "sansei",
+                                     "yonsei",
                                      "chinaman",
                                      "oriental",
                                      "coolie",
                                      "yellowman",
+                                     "nipponese",
+                                     "nip",
                                      "kanaka",
                                      "hawaii",
                                      "hawaiian",
                                      "polynesian"))
+
+Miscellaneous_keywords <- data.frame(word = c("traitor", 
+                                              "spy",
+                                              "saboteur",
+                                              "alien",
+                                              "facist",
+                                              "quisling",
+                                              "enemy"))
 
 
 
@@ -183,7 +197,8 @@ get_keywords <- function(data) {
                             German_keywords = German_keywords,
                             Roma_keywords = Roma_keywords,
                             Jewish_keywords = Jewish_keywords,
-                            AAPI_keywords = AAPI_keywords),
+                            AAPI_keywords = AAPI_keywords,
+                            Miscellaneous_keywords = Miscellaneous_keywords),
                             .id = "id") # combine all keywords with an id column
   
   keywords_data <- data |>

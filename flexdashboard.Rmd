@@ -8,6 +8,7 @@ output:
       bootswatch: yeti
 runtime: shiny
 ---
+
 ```{r global, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
@@ -26,11 +27,9 @@ source("text_analysis.R")
 pearl_data <- prepare_data(data = "Data/pearl_data.rds")
 ```
 
-About
-=====================================  
+# About
 
-Column {data-width="500"}
--------------------------------------
+## Column {data-width="500"}
 
 ### Background
 
@@ -44,34 +43,32 @@ The data was accessed through the Chronicling America API using the [httr2](http
 
 View some more Pearl Harbor front pages [here](https://www.nypl.org/blog/2017/12/07/pearl-harbor-front-page).
 
-Column {data-width="500"}
--------------------------------------
+## Column {data-width="500"}
 
 ```{r picture, echo = F, out.width = '100%'}
 knitr::include_graphics("images/pearl_harbor_front_page.png")
 ```
 
+# Overview
 
-Overview
-=====================================
+## Sidebar {.sidebar}
 
-Sidebar {.sidebar}
--------------------------------------
-Here is an overview of the data set. You can see the number of articles by several different variables. 
+Here is an overview of the data set. You can see the number of articles by several different variables.
 
-Insights: 
+Insights:
 
-- Ethnicities are not very spread out by location, most states have only one of two different ethnicities represented. 
+-   Ethnicities are not very spread out by location, most states have only one of two different ethnicities represented.
 
-- By far there are the most African American and Jewish newspapers represented in the data set (for newspapers that were associated with an ethnicity.)
+-   By far there are the most African American and Jewish newspapers represented in the data set (for newspapers that were associated with an ethnicity.)
 
-- Several newspapers published articles daily, leading them to have a high count of articles. Note: The Daily Alaska Empire published daily, which could be responsible for the high frequency of the word "Alaska" 
+-   Several newspapers published articles daily, leading them to have a high count of articles. Note: The Daily Alaska Empire published daily, which could be responsible for the high frequency of the word "Alaska"
 
-- The most common subjects were location and ethnicity based.
+-   The most common subjects were location and ethnicity based.
 
-Column {.tabset .tabset-fade}
--------------------------------------
+## Column {.tabset .tabset-fade}
+
 ### By Language
+
 ```{r}
 pearl_data |>
   filter(!is.na(language)) |>
@@ -88,6 +85,7 @@ pearl_data |>
 ```
 
 ### By Language and State
+
 ```{r}
 pearl_data |>
   filter(!is.na(language)) |>
@@ -105,6 +103,7 @@ pearl_data |>
 ```
 
 ### By Ethnicity
+
 ```{r}
 pearl_data |>
   filter(!is.na(ethnicity)) |>
@@ -120,6 +119,7 @@ pearl_data |>
 ```
 
 ### By Newspaper
+
 ```{r}
 pearl_data |>
   filter(!is.na(newspaper)) |>
@@ -136,6 +136,7 @@ pearl_data |>
 ```
 
 ### By Subject
+
 ```{r}
 data_subjects <- pearl_data |>
   unnest(subject) 
@@ -158,16 +159,14 @@ data_subjects |>
   theme_minimal()
 ```
 
-Common Words
-=====================================
+# Common Words
 
-Sidebar {.sidebar}
--------------------------------------
+## Sidebar {.sidebar}
 
-Select a newspaper title from the dropdown menu to see how often the 1000 most common words appeared in the front pages of the selected newspaper. 
+Select a newspaper title from the dropdown menu to see how often the 1000 most common words appeared in the front pages of the selected newspaper.
 
-Column {data-width="500"}
--------------------------------------
+## Column {data-width="500"}
+
 ```{r}
 source("text_analysis.R")
 words <- tokenize_words(data = pearl_data, text_column = text_data, type = "words")
@@ -192,10 +191,10 @@ renderTable({
 })
 ```
 
-Row {.tabset .tabset-fade}
--------------------------------------
+## Row {.tabset .tabset-fade}
 
 ### Common Words
+
 ```{r}
 words_clean |>
   count(word, sort = TRUE) |>
@@ -211,6 +210,7 @@ words_clean |>
 ```
 
 ### Before and After Pearl Harbor
+
 ```{r}
 words_clean |>
   count(word, before_pearl_harbor, sort = TRUE) |>
@@ -230,11 +230,12 @@ words_clean |>
   theme_minimal()
 ```
 
-Keywords
-=====================================
+# Keywords
 
-Sidebar {.sidebar}
--------------------------------------
+## Sidebar {.sidebar}
+
+Keywords were chosen from several resources, including Library of Congress' [Chronicling America Race and Ethnicity Keyword Thesaurus](https://edsitement.neh.gov/media-resources/race-and-ethnicity-keyword-thesaurus-chronicling-america).
+
 ```{r}
 inputPanel(
   pickerInput(
@@ -247,8 +248,8 @@ inputPanel(
 ))
 ```
 
-Column
--------------------------------------
+## Column
+
 ```{r}
 renderPlot({
 keywords |>
@@ -266,22 +267,20 @@ keywords |>
 })
 ```
 
-Sentiment Analysis
-=====================================  
+# Sentiment Analysis
 
-Sidebar {.sidebar}
--------------------------------------
+## Sidebar {.sidebar}
 
-- The Bing Sentiment Lexicon ranges from -1 to 1, with -1 being the most negative and 1 being the most positive.
+-   The Bing Sentiment Lexicon ranges from -1 to 1, with -1 being the most negative and 1 being the most positive.
 
-- The Afinn Sentiment Lexicon ranges from -5 to 5, with -5 being the most negative and 5 being the most positive.
+-   The Afinn Sentiment Lexicon ranges from -5 to 5, with -5 being the most negative and 5 being the most positive.
 
-- The NRC Sentiment Lexicon categorizes words into different emotions (Anger, Anticipation, Disgust, Fear, Joy, Negative, Sadness, Surprise, Trust).
+-   The NRC Sentiment Lexicon categorizes words into different emotions (Anger, Anticipation, Disgust, Fear, Joy, Negative, Sadness, Surprise, Trust).
 
-Row {.tabset .tabset-fade}
--------------------------------------
+## Row {.tabset .tabset-fade}
 
 ### Common Words (Bing Sentiment)
+
 ```{r, echo = FALSE}
 result <- analyze_sentiment(data = words_clean, type = "bing")
 bing <- result[[1]]
@@ -310,6 +309,7 @@ facet_wrap( ~ sentiment, scales = "free") +
 ```
 
 ### Common Words (Afinn Sentiment)
+
 ```{r, echo = FALSE}
 result <- analyze_sentiment(data = words_clean, type = "afinn")
 afinn <- result[[1]]
@@ -337,6 +337,7 @@ facet_wrap( ~ value, scales = "free") +
 ```
 
 ### NRC Sentiment
+
 ```{r}
 nrc <- get_sentiments("nrc")
 words |>
@@ -358,9 +359,7 @@ ggplot(aes(x = reorder(word, n), y = n, fill = sentiment)) +
   theme_minimal()
 ```
 
-
-Row {.tabset .tabset-fade}
--------------------------------------
+## Row {.tabset .tabset-fade}
 
 ### Bing Sentiment Over Time
 
@@ -381,6 +380,7 @@ ggplot(bing_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment
 ```
 
 ### Afinn Sentiment Over Time
+
 ```{r}
 result <- analyze_sentiment(data = words_clean, type = "afinn")
 afinn <- result[[1]]
@@ -401,11 +401,10 @@ ggplot(afinn_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentimen
   theme_minimal()
 ```
 
-Publishers and Sentiment
-=====================================
+# Publishers and Sentiment
 
-Column {data-width="400"}
--------------------------------------
+## Column {data-width="400"}
+
 ```{r}
 selectInput(inputId = "state_selector",
             label = "Select State:",
@@ -456,8 +455,7 @@ selectInput(inputId = "sentiment_selector",
 
 ```
 
-Plot
--------------------------------------
+## Plot
 
 ```{r, echo=FALSE}
 renderPlot({
@@ -495,8 +493,7 @@ renderPlot({
 })
 ```
 
-Column {data-width="300"}
--------------------------------------
+## Column {data-width="300"}
 
 ### Description
 
@@ -504,21 +501,19 @@ To your left, you will find two drop down menus. One is to select a state (or st
 
 Steps taken to gather data:
 
-- Gather all words appearing from the front pages of each publication.
+-   Gather all words appearing from the front pages of each publication.
 
-- Assign a sentiment to each word using the NRC Emotion Lexicon, which categorizes words based on various emotions.
+-   Assign a sentiment to each word using the NRC Emotion Lexicon, which categorizes words based on various emotions.
 
-- Organize the words by their respective publishers.
+-   Organize the words by their respective publishers.
 
-- Count the frequency of each sentiment across publishers, providing insight into the emotional tone of each publication.
+-   Count the frequency of each sentiment across publishers, providing insight into the emotional tone of each publication.
 
 The plot will take each publisher from the selected state and plot the number of times the selected sentiment appears on the front page.
 
 If there is no data for a given combination of "State" and "Sentiment", no plot will be generated.
 
-
-Common Phrases
-===================================== 
+# Common Phrases
 
 ## Column {data-width="300"}
 
@@ -533,11 +528,12 @@ dateRangeInput(
   )
 ```
 
-This section creates a network graph of commonly occurring phrases from the text of the front pages of newspapers from the entire United States. You may filter the range of dates that is taken from the data to see what common phrases were said in the front page during specific days. 
+This section creates a network graph of commonly occurring phrases from the text of the front pages of newspapers from the entire United States. You may filter the range of dates that is taken from the data to see what common phrases were said in the front page during specific days.
 
 Select the dates for which you would like to see, and a plot will generate to the right.
 
 ## Column {data-width="600"}
+
 ```{r}
 ngrams <- tokenize_words(data = pearl_data, text_column = text_data, type = "ngrams")
 
