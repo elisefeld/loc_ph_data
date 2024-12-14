@@ -228,7 +228,8 @@ Sidebar {.sidebar}
 -------------------------------------
 Say some stuff here I guess??
 
-### Keywords Before and After Pearl Harbor
+Column
+-------------------------------------
 ```{r}
 inputPanel(
   pickerInput(
@@ -445,6 +446,7 @@ Ngrams
 Sidebar {.sidebar}
 -------------------------------------
 Say some stuff here I guess??
+
 
 Column {data-width="300"}
 -------------------------------------
