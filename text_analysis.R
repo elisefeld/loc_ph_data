@@ -179,8 +179,7 @@ get_ngrams <- function(data) {
   
   ngram_filter <- data |> 
     separate(word, c("word1", "word2"), sep = " ") |> # separate words into two columns
-    filter(!word1 %in% stop_words$word, # filter out stopwords
-           !word2 %in% stop_words$word) |>
+    filter(!word1 %in% stop_words$word & !word2 %in% stop_words$word) |>
     count(word1, word2, sort = TRUE) # count the number of times each ngram appears
   
   ngram_filter_graph <- ngram_filter |>

@@ -547,32 +547,31 @@ renderPlot({
 
 ```{r}
 inputPanel(
-  pickerInput(
+  selectInput(
     inputId = "keyword_list",
     label = "Select Keywords:",
     choices = unique(keywords$id),
-    multiple = TRUE,
-    options = pickerOptions(actionsBox = TRUE, liveSearch = TRUE)))
+    multiple = TRUE))
 ```
 
 ## Column
 ```{r}
+#Fix the height on this
 ngrams_sep <- ngrams |>
   separate(word, into = c("word1", "word2"), sep = " ")
 
 renderDataTable({
-  selected_keywords <- as.character(unlist(AAPI_keywords$word))
+  vector <- input$keyword_list
   bigrams <- ngrams_sep |>
       select(as_date, word1, word2) |>
-      filter(word1 %in% selected_keywords | word2 %in% selected_keywords)
+      filter(word1 %in% vector | word2 %in% vector)
   
     bigrams |>
       count(word1, word2, sort = TRUE) |>
       rename(Word1 = word1, Word2 = word2, Count = n) |> # Rename columns
-      head(100) |>
       datatable(
         options = list(
-          pageLength = 100,   
+          pageLength = 50,   
           autoWidth = TRUE,
           searching = TRUE))
 })
