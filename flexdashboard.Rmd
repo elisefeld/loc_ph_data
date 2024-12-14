@@ -57,8 +57,12 @@ Overview
 
 Sidebar {.sidebar}
 -------------------------------------
-Say some stuff here I guess??
-
+Here is an overview of the data set. You can see the number of articles by several different variables. 
+Insights: 
+- Ethnicities are not very spread out by location, most states have only one of two different ethnicities represented. 
+- By far there are the most African American and Jewish newspapers represented in the data set (for newspapers that were associated with an ethnicity.)
+- Several newspapers published articles daily, leading them to have a high count of articles. Note: The Daily Alaska Empire published daily, which could be responsible for the high frequency of the word "Alaska" 
+- The most common subjects were location and ethnicity based.
 
 Column {.tabset .tabset-fade}
 -------------------------------------
@@ -154,7 +158,7 @@ Common Words
 
 Sidebar {.sidebar}
 -------------------------------------
-Say some stuff here I guess??
+Select a newspaper title from the dropdown menu to see how often the 1000 most common words appeared in the front pages of the selected newspaper. 
 
 Column {data-width="500"}
 -------------------------------------
@@ -261,7 +265,7 @@ Sentiment Analysis
 
 Sidebar {.sidebar}
 -------------------------------------
-Say some stuff here I guess??
+The Bing Sentiment Lexicon ranges from -1 to 1, with -1 being the most negative and 1 being the most positive. The Afinn Sentiment Lexicon ranges from -5 to 5, with -5 being the most negative and 5 being the most positive. The NRC Sentiment Lexicon categorizes words into different emotions (Anger, Anticipation, Disgust, Fear, Joy, Negative, Sadness, Surprise, Trust).
 
 Row {.tabset .tabset-fade}
 -------------------------------------
