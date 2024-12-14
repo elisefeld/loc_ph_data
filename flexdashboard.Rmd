@@ -225,7 +225,8 @@ inputPanel(
     label = "Select Keywords:",
     choices = unique(keywords$id),
     multiple = TRUE,
-    options = pickerOptions(actionsBox = TRUE, liveSearch = TRUE)
+    options = pickerOptions(actionsBox = TRUE, liveSearch = TRUE),
+    selected = "Nazi"
 ))
 ```
 
