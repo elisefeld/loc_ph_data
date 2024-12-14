@@ -35,15 +35,28 @@ pearl_data <- prepare_data(data = "Data/pearl_data.rds")
 
 By [Elise Hachfeld](https://github.com/elisefeld) and [Theresa Worden](https://github.com/wordentheresa0)
 
-The way people consume media has changed drastically since 1941, but has its content? We are interested in how major historical events affect the sentiment of people reflected in the media. To investigate this, we looked at the text of newspapers 3 months before and after the bombing of Pearl Harbor on December 7th, 1941 (from September 7th 1941 to March 7th, 1942.)
+**The way people consume media has changed dramatically since the 1940s, but has the content itself changed?**
 
-We sourced our data from the Library of Congress [Chronicling America](https://www.loc.gov/collections/chronicling-america/about-this-collection/) project, which contains historical American newspapers from 1756 to 1963.
+Media is one of the main ways we learn information, so it has a significant capacity to influence public perception. Our research explores how major historical events influence sentiment in the media. Specifically, we examined how the media portrays different ethnic groups as a result of historical events.
+
+For this project, we analyzed the front pages of newspapers for three months before and after the bombing of Pearl Harbor on December 7th, 1941 (from September 7th 1941 to March 7th, 1942.) This time frame allowed us to capture the media response to a critical moment for the United States in World War II.
+
+The data was sourced from the Library of Congress [Chronicling America](https://www.loc.gov/collections/chronicling-america/about-this-collection/) project, a collection containing historical American newspapers from 1756 through 1963.
 
 The data was accessed through the Chronicling America API using the [httr2](https://httr2.r-lib.org) and [jsonlite](https://jeroen.r-universe.dev/jsonlite) packages.
 
-View some more Pearl Harbor front pages [here](https://www.nypl.org/blog/2017/12/07/pearl-harbor-front-page).
+This project was built with flexdashboard and shiny. To view the source code, click [here](https://github.com/elisefeld/loc_ph_data).
+
+------------------------------------------------------------------------
+
+**Further Reading:**
+
+-   More Pearl Harbor front pages [here](https://www.nypl.org/blog/2017/12/07/pearl-harbor-front-page).
+
+-   [WWII Propaganda: The Influence of Racism](https://cwp.missouri.edu/2012/wwii-propaganda-the-influence-of-racism/)
 
 ## Column {data-width="500"}
+
 ```{r picture, echo = F, out.width = '100%'}
 knitr::include_graphics("images/pearl_harbor_front_page.png")
 ```
@@ -52,9 +65,13 @@ knitr::include_graphics("images/pearl_harbor_front_page.png")
 
 ## Sidebar {.sidebar}
 
-Here is an overview of the data set. You can see the number of articles by several different variables.
+Here is an overview of the entire data set from 09/07/1941 to 03/07/1942.
 
-Insights:
+You can see the number of articles by several different variables.
+
+------------------------------------------------------------------------
+
+**Insights:**
 
 -   Ethnicities are not very spread out by location, most states have only one of two different ethnicities represented.
 
@@ -67,6 +84,7 @@ Insights:
 ## Column {.tabset .tabset-fade}
 
 ### By Language
+
 ```{r}
 pearl_data |>
   filter(!is.na(language)) |>
@@ -76,13 +94,13 @@ pearl_data |>
   geom_col() +
   coord_flip() +
   labs(title = "Number of Articles by Language",
-       subtitle = "September 7th, 1941 to March 7th, 1942",
        x = "Language",
        y = "Count") +
   theme_minimal()
 ```
 
 ### By Language and State
+
 ```{r}
 pearl_data |>
   filter(!is.na(language)) |>
@@ -92,7 +110,6 @@ pearl_data |>
   geom_col() +
   coord_flip() +
   labs(title = "Number of Articles by Language and State",
-       subtitle = "September 7th, 1941 to March 7th, 1942",
        x = "Language",
        y = "Count") +
   facet_wrap(~state) +
@@ -100,6 +117,7 @@ pearl_data |>
 ```
 
 ### By Ethnicity
+
 ```{r}
 pearl_data |>
   filter(!is.na(ethnicity)) |>
@@ -108,13 +126,13 @@ pearl_data |>
   geom_col() +
   coord_flip() +
   labs(title = "Number of Articles by Ethnicity",
-       subtitle = "September 7th, 1941 to March 7th, 1942",
        x = "Ethnicity",
        y = "Count") +
   theme_minimal()
 ```
 
 ### By Newspaper
+
 ```{r}
 pearl_data |>
   filter(!is.na(newspaper)) |>
@@ -124,13 +142,13 @@ pearl_data |>
   geom_col() +
   coord_flip() +
   labs(title = "Number of Articles by Newspaper",
-       subtitle = "September 7th, 1941 to March 7th, 1942",
        x = "Newspaper",
        y = "Count") +
   theme_minimal()
 ```
 
 ### By Subject
+
 ```{r}
 data_subjects <- pearl_data |>
   unnest(subject) 
@@ -147,7 +165,6 @@ data_subjects |>
   geom_col() +
   coord_flip() +
   labs(title = "Number of Articles by Subject",
-       subtitle = "September 7th, 1941 to March 7th, 1942",
        x = "Subject",
        y = "Count") +
   theme_minimal()
@@ -159,7 +176,16 @@ data_subjects |>
 
 Select a newspaper title from the dropdown menu to see how often the 1000 most common words appeared in the front pages of the selected newspaper.
 
+------------------------------------------------------------------------
+
+**Insights:**
+
+-   Both the words War and Japanese became much more common after Pearl Harbor.
+
+-   Japanese doesn't appear in the top 20 words before the attack, while German does not appear in the top 20 words after the attack, showing how the newspaper's focus shifted.
+
 ## Column {data-width="500"}
+
 ```{r}
 source("text_analysis.R")
 words <- tokenize_words(data = pearl_data, text_column = text_data, type = "words")
@@ -187,6 +213,7 @@ renderTable({
 ## Row {.tabset .tabset-fade}
 
 ### Common Words
+
 ```{r}
 words_clean |>
   count(word, sort = TRUE) |>
@@ -202,6 +229,7 @@ words_clean |>
 ```
 
 ### Before and After Pearl Harbor
+
 ```{r}
 words_clean |>
   count(word, before_pearl_harbor, sort = TRUE) |>
@@ -225,8 +253,6 @@ words_clean |>
 
 ## Sidebar {.sidebar}
 
-Keywords were chosen from several resources, including Library of Congress' [Chronicling America Race and Ethnicity Keyword Thesaurus](https://edsitement.neh.gov/media-resources/race-and-ethnicity-keyword-thesaurus-chronicling-america).
-
 ```{r}
 inputPanel(
   pickerInput(
@@ -239,7 +265,24 @@ inputPanel(
 ))
 ```
 
+Keywords were chosen from several resources, including Library of Congress' [Chronicling America Race and Ethnicity Keyword Thesaurus](https://edsitement.neh.gov/media-resources/race-and-ethnicity-keyword-thesaurus-chronicling-america) and the Houston Holocaust Museum's [Vocabulary List.](https://hmh.org/education/resources/vocabulary-terms-related-holocaust/)
+
+*Please note that many of these words are derogatory terms for ethnic groups that were used at the time, and were included to provide a comprehensive view of the language used towards ethnic groups in the newspapers.*
+
+------------------------------------------------------------------------
+
+**Insights:**
+
+-   The word enemy increased greatly in frequency after the attack on Pearl Harbor.
+
+-   Several words related to Japanese people, including Japanese, Japan and the slur "Jap" also increased in frequency dramatically.
+
+-   Words relating to German people with neutral sentiment (German, Germans) decreased in sentiment, while derogatory terms for German people and German soliders increased.
+
+-   Most words relating to the Nazi party also decreased in frequency after pearl harbor.
+
 ## Column
+
 ```{r}
 renderPlot({
 keywords |>
@@ -260,15 +303,25 @@ keywords |>
 # Sentiment Analysis
 
 ## Sidebar {.sidebar}
+
 -   The Bing Sentiment Lexicon ranges from -1 to 1, with -1 being the most negative and 1 being the most positive.
 
 -   The Afinn Sentiment Lexicon ranges from -5 to 5, with -5 being the most negative and 5 being the most positive.
 
 -   The NRC Sentiment Lexicon categorizes words into different emotions (Anger, Anticipation, Disgust, Fear, Joy, Negative, Sadness, Surprise, Trust).
 
+    ------------------------------------------------------------------------
+
+**Insights:**
+
+-   Both the Afinn and Bing sentiments were overwhelming negative over the entire time period. This suggests that news that is reported is more often bad than good.
+
+-   Both sentiments also appeared to trend more negative over time.
+
 ## Row {.tabset .tabset-fade}
 
 ### Common Words (Bing Sentiment)
+
 ```{r, echo = FALSE}
 result <- analyze_sentiment(data = words_clean, type = "bing")
 bing <- result[[1]]
@@ -297,6 +350,7 @@ facet_wrap( ~ sentiment, scales = "free") +
 ```
 
 ### Common Words (Afinn Sentiment)
+
 ```{r, echo = FALSE}
 result <- analyze_sentiment(data = words_clean, type = "afinn")
 afinn <- result[[1]]
@@ -324,6 +378,7 @@ facet_wrap( ~ value, scales = "free") +
 ```
 
 ### NRC Sentiment
+
 ```{r}
 nrc <- get_sentiments("nrc")
 words |>
@@ -348,6 +403,7 @@ ggplot(aes(x = reorder(word, n), y = n, fill = sentiment)) +
 ## Row {.tabset .tabset-fade}
 
 ### Bing Sentiment Over Time
+
 ```{r, echo=FALSE}
 ggplot(bing_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment > 0)) +
   geom_col(show.legend = FALSE) +
@@ -365,6 +421,7 @@ ggplot(bing_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment
 ```
 
 ### Afinn Sentiment Over Time
+
 ```{r}
 result <- analyze_sentiment(data = words_clean, type = "afinn")
 afinn <- result[[1]]
@@ -387,7 +444,8 @@ ggplot(afinn_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentimen
 
 # Publishers and Sentiment
 
-## Column {data-width="400"}
+## Sidebar {.sidebar}
+
 ```{r}
 selectInput(inputId = "state_selector",
             label = "Select State:",
@@ -438,7 +496,24 @@ selectInput(inputId = "sentiment_selector",
 
 ```
 
+Above, you will find two drop down menus. One is to select a state (or states) from the United States, and the other is to select a category of the NRC Emotion Lexicon. Based on the selection from the drop down menus, a plot showing the word count for newspaper publishers related to the chosen sentiment in the selected state(s).
+
+**Steps taken to gather data:**
+
+-   Gather all words appearing from the front pages of each publication.
+
+-   Assign a sentiment to each word using the NRC Emotion Lexicon, which categorizes words based on various emotions.
+
+-   Organize the words by their respective publishers.
+
+-   Count the frequency of each sentiment across publishers, providing insight into the emotional tone of each publication.
+
+The plot will take each publisher from the selected state and plot the number of times the selected sentiment appears on the front page.
+
+If there is no data for a given combination of "State" and "Sentiment", no plot will be generated.
+
 ## Plot
+
 ```{r, echo=FALSE}
 renderPlot({
   selected_state <- str_to_lower(input$state_selector)
@@ -475,29 +550,10 @@ renderPlot({
 })
 ```
 
-## Column {data-width="300"}
-
-### Description
-
-To your left, you will find two drop down menus. One is to select a state (or states) from the United States, and the other is to select a category of the NRC Emotion Lexicon. Based on the selection from the drop down menus, a plot showing the word count for newspaper publishers related to the chosen sentiment in the selected state(s).
-
-Steps taken to gather data:
-
--   Gather all words appearing from the front pages of each publication.
-
--   Assign a sentiment to each word using the NRC Emotion Lexicon, which categorizes words based on various emotions.
-
--   Organize the words by their respective publishers.
-
--   Count the frequency of each sentiment across publishers, providing insight into the emotional tone of each publication.
-
-The plot will take each publisher from the selected state and plot the number of times the selected sentiment appears on the front page.
-
-If there is no data for a given combination of "State" and "Sentiment", no plot will be generated.
-
 # Common Phrases
 
 ## Column {data-width="300"}
+
 ```{r}
 dateRangeInput(
     inputId = "date_selector",
@@ -514,6 +570,7 @@ This section creates a network graph of commonly occurring phrases from the text
 Select the dates for which you would like to see, and a plot will generate to the right.
 
 ## Column
+
 ```{r}
 ngrams <- tokenize_words(data = pearl_data, text_column = text_data, type = "ngrams")
 
@@ -540,7 +597,6 @@ renderPlot({
 })
 ```
 
-
 # Keyword Phrases
 
 ## Sidebar {.sidebar}
@@ -555,6 +611,7 @@ inputPanel(
 ```
 
 ## Column
+
 ```{r}
 #Fix the height on this
 ngrams_sep <- ngrams |>
