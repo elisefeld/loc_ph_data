@@ -459,9 +459,8 @@ ggplot(afinn_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentimen
 ```
 
 # Publishers and Sentiment
-
-## Sidebar {.sidebar}
-
+## Column {data-width="400"}
+### Parameters
 ```{r}
 selectInput(inputId = "state_selector",
             label = "Select State:",
@@ -494,8 +493,6 @@ selectInput(inputId = "state_selector",
                         "West Virginia" = "west virginia"),
             selected = "Alaska",
             multiple = FALSE)
-
-
 selectInput(inputId = "sentiment_selector",
             label = "Select Sentiment:",
             choices = c("Anger" = "anger",
@@ -509,7 +506,6 @@ selectInput(inputId = "sentiment_selector",
                         "Trust" = "trust"),
             selected = "Anger",
             multiple = FALSE)
-
 ```
 
 Above, you will find two drop down menus. One is to select a state (or states) from the United States, and the other is to select a category of the NRC Emotion Lexicon. Based on the selection from the drop down menus, a plot showing the word count for newspaper publishers related to the chosen sentiment in the selected state(s).
@@ -530,7 +526,8 @@ If there is no data for a given combination of "State" and "Sentiment", no plot 
 
 ## Plot
 
-```{r}
+
+```{r, echo=FALSE}
 renderPlot({
   selected_state <- str_to_lower(input$state_selector)
   selected_sentiment <- str_to_lower(input$sentiment_selector)
@@ -543,7 +540,9 @@ renderPlot({
     slice_max(n, n = 10) |>
     ungroup()
   
- if (nrow(test) == 0) {
+  
+  
+  if (nrow(test) == 0) {
     ggplot() +
       geom_blank() +
       labs(title = "No data available for the selected inputs",
@@ -565,6 +564,23 @@ renderPlot({
   
 })
 ```
+## Column {data-width="300"}
+### Description
+To your left, you will find two drop down menus. One is to select a state (or states) from the United States, and the other is to select a category of the NRC Emotion Lexicon. Based on the selection from the drop down menus, a plot showing the word count for newspaper publishers related to the chosen sentiment in the selected state(s).
+
+Steps taken to gather data:
+
+- Gather all words appearing from the front pages of each publication.
+
+- Assign a sentiment to each word using the NRC Emotion Lexicon, which categorizes words based on various emotions.
+
+- Organize the words by their respective publishers.
+
+- Count the frequency of each sentiment across publishers, providing insight into the emotional tone of each publication.
+
+The plot will take each publisher from the selected state and plot the number of times the selected sentiment appears on the front page.
+
+If there is no data for a given combination of "State" and "Sentiment", no plot will be generated.
 
 # Common Phrases
 
