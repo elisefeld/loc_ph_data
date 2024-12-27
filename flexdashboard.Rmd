@@ -1,12 +1,19 @@
 ---
 title: "Newspaper Content Analysis"
 author: "Elise Hachfeld and Theresa Worden"
-output: 
+output:
   flexdashboard::flex_dashboard:
     theme:
       version: 4
       bootswatch: yeti
 runtime: shiny
+resource_files:
+- "AFINN/AFINN-111.txt"
+- "AFINN/AFINN-96.txt"
+- app.R
+- Data/raw_data.rds
+- text_analysis.R
+- data_prep.R
 ---
 
 ```{r global, include=FALSE}
@@ -18,13 +25,14 @@ library(igraph)
 library(shinyWidgets)
 library(ggraph)
 library(gt)
-source("data_prep.R")
+library(textdata)
 source("text_analysis.R")
 ```
 
 ```{r import}
-#get_all_years("1941", "1942") commenting out because I don't want to run this every time...
-pearl_data <- prepare_data(data = "Data/pearl_data.rds")
+pearl_data <- read_rds("data/clean_data.rds")
+words_clean <- read_rds("data/words_clean.rds")
+ngrams <- read_rds("data/ngrams.rds")
 ```
 
 # About
@@ -187,11 +195,8 @@ Select a newspaper title from the dropdown menu to see how often the 1000 most c
 ## Column {data-width="500"}
 
 ```{r}
-source("text_analysis.R")
-words <- tokenize_words(data = pearl_data, text_column = text_data, type = "words")
 keywords_list <- get_keywords_list()
-keywords <- get_keywords(words, keywords_list)
-words_clean <- remove_stopwords(data = words)
+keywords <- get_keywords(words_clean, keywords_list)
 
 inputPanel(
   pickerInput(
@@ -323,12 +328,13 @@ keywords |>
 
 ### Common Words (Bing Sentiment)
 
-```{r, echo = FALSE}
+```{r}
 result <- analyze_sentiment(data = words_clean, type = "bing")
 bing <- result[[1]]
 bing_avg <- result[[2]]
 bing_date <- result[[3]]
 
+if (nrow(bing) > 0) {
 bing |>
   group_by(sentiment, word) |>
   summarize(n = n()) |>
@@ -347,12 +353,21 @@ facet_wrap( ~ sentiment, scales = "free") +
     subtitle = "Based on the Bing Sentiment Lexicon"
   ) +
   theme_minimal()
-
+} else {
+  ggplot() +
+    geom_blank() +
+    labs(
+      title = "No Data Available for Bing Sentiment",
+      x = NULL,
+      y = NULL
+    ) +
+    theme_void()
+}
 ```
 
 ### Common Words (Afinn Sentiment)
 
-```{r, echo = FALSE}
+```{r}
 result <- analyze_sentiment(data = words_clean, type = "afinn")
 afinn <- result[[1]]
 afinn_avg <- result[[2]]
@@ -382,7 +397,7 @@ facet_wrap( ~ value, scales = "free") +
 
 ```{r}
 nrc <- get_sentiments("nrc")
-words |>
+words_clean |>
   inner_join(nrc) |>
   count(word, sentiment, sort = TRUE) |>
   group_by(sentiment) |>
@@ -405,7 +420,7 @@ ggplot(aes(x = reorder(word, n), y = n, fill = sentiment)) +
 
 ### Bing Sentiment Over Time
 
-```{r, echo=FALSE}
+```{r}
 ggplot(bing_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment > 0)) +
   geom_col(show.legend = FALSE) +
     geom_vline(xintercept = as.Date("1941-12-07"), color = "black") +
@@ -515,12 +530,12 @@ If there is no data for a given combination of "State" and "Sentiment", no plot 
 
 ## Plot
 
-```{r, echo=FALSE}
+```{r}
 renderPlot({
   selected_state <- str_to_lower(input$state_selector)
   selected_sentiment <- str_to_lower(input$sentiment_selector)
   
-  test <- words |>
+  test <- words_clean |>
     inner_join(nrc, by = "word") |>
     filter(state == selected_state & sentiment == selected_sentiment) |>
     count(newspaper_title, sentiment, sort = TRUE) |>
@@ -573,8 +588,6 @@ Select the dates for which you would like to see, and a plot will generate to th
 ## Column
 
 ```{r}
-ngrams <- tokenize_words(data = pearl_data, text_column = text_data, type = "ngrams")
-
 filtered_ngrams <- reactive({
   ngrams |>
     add_count(word) |>

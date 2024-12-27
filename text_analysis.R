@@ -3,57 +3,43 @@ library(tidytext)
 library(stopwords)
 library(igraph)
 library(janitor)
-
-tokenize_words <- function(data, text_column, type) {
-  data  <- data |>
-    mutate(row_id = row_number()) 
-  
-    if (type == "ngrams") {
-      tokenized <- data |>
-        unnest_tokens(word, {{ text_column }}, token = type, n = 2) # tokenize groups of 2
-    } 
-    if (type == "words") {
-      tokenized <- data |>
-        unnest_tokens(word, {{ text_column }}, token = type) # tokenize single words
-    } 
-  
-  tokenized <- tokenized |>
-    filter(str_detect(word, "[a-z]")) |>  #filter out Hebrew characters and numbers
-    filter(!is.na(word))
-    
-  return(tokenized)
-}
+library(rappdirs)
 
 
-remove_stopwords <- function(data) {
-  smart_stopwords <- get_stopwords(source = "smart")
-  supported_languages <- stopwords_getlanguages(source = "stopwords-iso")
-  
-  # Removing English Stop Words
-  data <- data |>
-    anti_join(smart_stopwords, by = "word") 
-  
-  english <- data |>
-    filter(!(data$iso_code %in% supported_languages) | is.na(data$iso_code))
-  
-  # Removing Non-English Stop Words
-  other_langs <- data |>
-    filter(data$iso_code %in% supported_languages & !is.na(data$iso_code))
-    
-  for (iso_code in unique(other_langs$iso_code)) {
-    stopwords <- get_stopwords(language = iso_code, source = "stopwords-iso")
-    
-    other_langs <- other_langs |>
-      anti_join(stopwords, by = "word")
-    
-    data <- bind_rows(english, other_langs)
+download_lexicon <- function(type) {
+  if (type == "afinn") {
+    url <- "http://www2.imm.dtu.dk/pubdb/edoc/imm6010.zip"
+    file <- "imm6010.zip"
   }
-  return(data)
-}
   
+  if (type == "nrc") {
+    url <- "http://saifmohammad.com/WebDocs/Lexicons/NRC-Emotion-Lexicon.zip"
+    file <- "NRC-Emotion-Lexicon.zip"
+  }
+  
+  cache_dir <- rappdirs::user_cache_dir(paste0("/textdata/", type))
+  
+  if (!dir.exists(cache_dir)) {
+    dir.create(cache_dir, recursive = TRUE)
+  }
+  
+  destination <- file.path(cache_dir, "file")
+  
+  download.file(url, destfile = destination, mode = "wb")
+  
+  if (type == "afinn") {
+    lexicon <- textdata::lexicon_afinn(manual_download = TRUE)
+  }
+  if (type == "nrc") {
+    lexicon <- textdata::lexicon_nrc_emotion(manual_download = TRUE)
+  }
+  return(lexicon)
+}
 
 analyze_sentiment <- function(data, type) {
-  
+  if (type == "afinn") {
+    download_lexicon("afinn")
+  }
   sentiments <- get_sentiments(type)
   
   sentiment <- data |>
@@ -95,7 +81,6 @@ analyze_sentiment <- function(data, type) {
   
   return(list(sentiment, average, summary))
 }
-
 
 
 get_ngrams <- function(data) {

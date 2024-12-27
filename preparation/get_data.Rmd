@@ -1,0 +1,32 @@
+---
+title: "get_data"
+author: "Elise Hachfeld"
+date: "2024-12-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+source("scraping.R")
+source("data_prep.R")
+```
+
+```{r}
+newspapers_data <- get_paginated_data(start_date = "1941-09-07",
+                   end_date = "1942-03-07",
+                   fa = "language:english",
+                   file_path = "data/newspapers.rds")
+#saves the data to a file called "1941-09-07_to_1942-03-07_newspapers.rds"
+
+pearl_data <- prepare_data("1941-09-07_to_1942-03-07_newspapers.rds")
+#saves the clean data to a file called "clean_data.rds"
+
+words <- tokenize_words(data = pearl_data, text_column = text_data, type = "words")
+words_clean <- remove_stopwords(data = words)
+saveRDS(words_clean, "words_clean.rds")
+
+ngrams <- tokenize_words(data = pearl_data, text_column = text_data, type = "ngrams")
+saveRDS(ngrams, "ngrams.rds")
+
+
+```

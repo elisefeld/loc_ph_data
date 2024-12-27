@@ -1,11 +1,13 @@
 TO DO
-- Sentiment for each newspaper/publisher
+
 - Map of different newspapers
 - Look for specific word across states
     - See if different states use certain words more than others
-- Most common words (in general)
 - Most common words (for each publisher)
 - Most common words (over one day)
 - grouping states by region
-- line on plot on december 7 
-- point out important dates on plots
+- point out important dates on plots 
+
+- Sentiment for each newspaper/publisher  X DONE
+- Most common words (in general) X DONE
+- line on plot on december 7  X DONE
