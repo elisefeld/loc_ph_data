@@ -8,31 +8,28 @@ output:
       bootswatch: yeti
 runtime: shiny
 resource_files:
-- "AFINN/AFINN-111.txt"
-- "AFINN/AFINN-96.txt"
-- app.R
-- Data/raw_data.rds
 - text_analysis.R
-- data_prep.R
+- data/Sentiments/afinn.rds
+- data/Sentiments/bing.rds
+- data/Sentiments/nrc.rds
+- data/clean_data.rds
+- data/words_clean.rds
+- data/ngrams.rds
 ---
 
 ```{r global, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-library(tidyverse)
-library(tidytext)
-library(DT)
-library(igraph)
+knitr::opts_chunk$set(echo = FALSE)
 library(shinyWidgets)
-library(ggraph)
-library(gt)
-library(textdata)
 source("text_analysis.R")
 ```
 
 ```{r import}
-pearl_data <- read_rds("data/clean_data.rds")
-words_clean <- read_rds("data/words_clean.rds")
-ngrams <- read_rds("data/ngrams.rds")
+pearl_data <- readRDS("data/clean_data.rds")
+words_clean <- readRDS("data/words_clean.rds")
+ngrams <- readRDS("data/ngrams.rds")
+bing <- readRDS("data/Sentiments/bing.rds")
+afinn <- readRDS("data/Sentiments/afinn.rds")
+nrc <- readRDS("data/Sentiments/nrc.rds")
 ```
 
 # About
@@ -97,7 +94,6 @@ You can see the number of articles by several different variables.
 pearl_data |>
   filter(!is.na(language)) |>
   count(language, sort = TRUE) |>
-  filter(language != "NA") |>
   ggplot(aes(reorder(language, n), n), fill = language) +
   geom_col() +
   coord_flip() +
@@ -185,10 +181,10 @@ data_subjects |>
 Select a newspaper title from the dropdown menu to see how often the 1000 most common words appeared in the front pages of the selected newspaper.
 
 ------------------------------------------------------------------------
-
-**Insights:**
-
--   Both the words War and Japanese became much more common after Pearl Harbor.
+  
+  **Insights:**
+  
+  -   Both the words War and Japanese became much more common after Pearl Harbor.
 
 -   Japanese doesn't appear in the top 20 words before the attack, while German does not appear in the top 20 words after the attack, showing how the newspaper's focus shifted.
 
@@ -205,7 +201,7 @@ inputPanel(
     choices = unique(words_clean$newspaper_title),
     multiple = TRUE,
     options = pickerOptions(actionsBox = TRUE, liveSearch = TRUE)
-))
+  ))
 
 renderTable({
   words_clean |>
@@ -268,18 +264,18 @@ inputPanel(
     multiple = TRUE,
     options = pickerOptions(actionsBox = TRUE, liveSearch = TRUE),
     selected = "Nazi"
-))
+  ))
 ```
 
 Keywords were chosen from several resources, including Library of Congress' [Chronicling America Race and Ethnicity Keyword Thesaurus](https://edsitement.neh.gov/media-resources/race-and-ethnicity-keyword-thesaurus-chronicling-america) and the Houston Holocaust Museum's [Vocabulary List.](https://hmh.org/education/resources/vocabulary-terms-related-holocaust/)
 
 *Please note that many of these words are derogatory terms for ethnic groups that were used at the time, and were included to provide a comprehensive view of the language used towards ethnic groups in the newspapers.*
-
-------------------------------------------------------------------------
-
-**Insights:**
-
--   The word enemy increased greatly in frequency after the attack on Pearl Harbor.
+  
+  ------------------------------------------------------------------------
+  
+  **Insights:**
+  
+  -   The word enemy increased greatly in frequency after the attack on Pearl Harbor.
 
 -   Several words related to Japanese people, including Japanese, Japan and the slur "Jap" also increased in frequency dramatically.
 
@@ -291,18 +287,18 @@ Keywords were chosen from several resources, including Library of Congress' [Chr
 
 ```{r}
 renderPlot({
-keywords |>
-  filter(id %in% c(input$ids)) |>
-  count(word, before_pearl_harbor, sort = TRUE) |>
-  ggplot(aes(reorder(word, n), n), fill = before_pearl_harbor) +
-  geom_col() +
-  coord_flip() +
-  labs(title = paste0(input$ids, " Keywords in Front Pages of Newspapers"),
-       subtitle = "September 7th, 1941 to March 7th, 1942",
-       x = "Count",
-       y = "Keyword") +
-  theme_minimal() +
-  facet_wrap(~before_pearl_harbor)
+  keywords |>
+    filter(id %in% c(input$ids)) |>
+    count(word, before_pearl_harbor, sort = TRUE) |>
+    ggplot(aes(reorder(word, n), n), fill = before_pearl_harbor) +
+    geom_col() +
+    coord_flip() +
+    labs(title = paste0(input$ids, " Keywords in Front Pages of Newspapers"),
+         subtitle = "September 7th, 1941 to March 7th, 1942",
+         x = "Count",
+         y = "Keyword") +
+    theme_minimal() +
+    facet_wrap(~before_pearl_harbor)
 })
 ```
 
@@ -316,11 +312,11 @@ keywords |>
 
 -   The NRC Sentiment Lexicon categorizes words into different emotions (Anger, Anticipation, Disgust, Fear, Joy, Negative, Sadness, Surprise, Trust).
 
-    ------------------------------------------------------------------------
-
-**Insights:**
-
--   Both the Afinn and Bing sentiments were overwhelmingly negative over the entire time period. This suggests that news that is reported is more often bad than good.
+------------------------------------------------------------------------
+  
+  **Insights:**
+  
+  -   Both the Afinn and Bing sentiments were overwhelmingly negative over the entire time period. This suggests that news that is reported is more often bad than good.
 
 -   Both sentiments also appeared to trend more negative over time.
 
@@ -329,49 +325,35 @@ keywords |>
 ### Common Words (Bing Sentiment)
 
 ```{r}
-result <- analyze_sentiment(data = words_clean, type = "bing")
-bing <- result[[1]]
-bing_avg <- result[[2]]
-bing_date <- result[[3]]
+bing_result <- analyze_sentiment(data = words_clean, bing)
+bing <- bing_result[[1]]
+bing_avg <- bing_result[[2]]
+bing_date <- bing_result[[3]]
 
-if (nrow(bing) > 0) {
 bing |>
-  group_by(sentiment, word) |>
-  summarize(n = n()) |>
-  arrange(sentiment, desc(n)) |>
-  group_by(sentiment) |>
-  slice_max(n, n = 10) |>
-  ungroup() |>
-  ggplot(aes(reorder(word, n), n, fill = as.factor(sentiment))) +
-  geom_col(show.legend = FALSE) +
-  coord_flip() +
+group_by(sentiment, word) |>
+summarize(n = n(), .groups = "drop") |>
+arrange(sentiment, desc(n)) |>
+group_by(sentiment) |>
+slice_max(n, n = 10) |>
+ggplot(aes(reorder(word, n), n, fill = as.factor(sentiment))) +
+geom_col(show.legend = FALSE) +
+coord_flip() +
 facet_wrap( ~ sentiment, scales = "free") +
-  labs(
-    x = "Word",
-    y = "Count",
-    title = "Most Common Words by Bing Sentiment",
-    subtitle = "Based on the Bing Sentiment Lexicon"
-  ) +
-  theme_minimal()
-} else {
-  ggplot() +
-    geom_blank() +
-    labs(
-      title = "No Data Available for Bing Sentiment",
-      x = NULL,
-      y = NULL
-    ) +
-    theme_void()
-}
+labs(x = "Word",
+     y = "Count",
+     title = "Most Common Words by Bing Sentiment",
+     subtitle = "Based on the Bing Sentiment Lexicon") +
+theme_minimal()
 ```
 
 ### Common Words (Afinn Sentiment)
 
 ```{r}
-result <- analyze_sentiment(data = words_clean, type = "afinn")
-afinn <- result[[1]]
-afinn_avg <- result[[2]]
-afinn_date <- result[[3]]
+afinn_result <- analyze_sentiment(data = words_clean, afinn)
+afinn <- afinn_result[[1]]
+afinn_avg <- afinn_result[[2]]
+afinn_date <- afinn_result[[3]]
 
 afinn |>
   group_by(value, word) |>
@@ -383,7 +365,7 @@ afinn |>
   ggplot(aes(reorder(word, n), n, fill = as.factor(value))) +
   geom_col(show.legend = FALSE) +
   coord_flip() +
-facet_wrap( ~ value, scales = "free") +
+  facet_wrap( ~ value, scales = "free") +
   labs(
     x = "Word",
     y = "Count",
@@ -396,14 +378,13 @@ facet_wrap( ~ value, scales = "free") +
 ### NRC Sentiment
 
 ```{r}
-nrc <- get_sentiments("nrc")
 words_clean |>
   inner_join(nrc) |>
   count(word, sentiment, sort = TRUE) |>
   group_by(sentiment) |>
   slice_max(n, n = 10) |>
   ungroup() |> 
-ggplot(aes(x = reorder(word, n), y = n, fill = sentiment)) +
+  ggplot(aes(x = reorder(word, n), y = n, fill = sentiment)) +
   geom_col(show.legend = FALSE) +
   coord_flip() +
   facet_wrap(~ sentiment, scales = "free_y") +
@@ -423,7 +404,7 @@ ggplot(aes(x = reorder(word, n), y = n, fill = sentiment)) +
 ```{r}
 ggplot(bing_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment > 0)) +
   geom_col(show.legend = FALSE) +
-    geom_vline(xintercept = as.Date("1941-12-07"), color = "black") +
+  geom_vline(xintercept = as.Date("1941-12-07"), color = "black") +
   labs(
     title = "Average Bing Sentiment Over Time",
     subtitle = "Based on the Bing Sentiment Lexicon",
@@ -439,14 +420,9 @@ ggplot(bing_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment
 ### Afinn Sentiment Over Time
 
 ```{r}
-result <- analyze_sentiment(data = words_clean, type = "afinn")
-afinn <- result[[1]]
-afinn_avg <- result[[2]]
-afinn_date <- result[[3]]
-
 ggplot(afinn_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment > 0)) +
   geom_col(show.legend = FALSE) +
-    geom_vline(xintercept = as.Date("1941-12-07"), color = "black") +
+  geom_vline(xintercept = as.Date("1941-12-07"), color = "black") +
   labs(
     title = "Average Afinn Sentiment Over Time",
     subtitle = "Based on the Afinn Sentiment Lexicon",
@@ -457,6 +433,10 @@ ggplot(afinn_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentimen
   scale_x_date(date_breaks = "1 month", date_labels = "%b %Y") +
   theme_minimal()
 ```
+
+
+
+
 
 # Publishers and Sentiment
 ## Column {data-width="400"}
@@ -511,8 +491,8 @@ selectInput(inputId = "sentiment_selector",
 Above, you will find two drop down menus. One is to select a state (or states) from the United States, and the other is to select a category of the NRC Emotion Lexicon. Based on the selection from the drop down menus, a plot showing the word count for newspaper publishers related to the chosen sentiment in the selected state(s).
 
 **Steps taken to gather data:**
-
--   Gather all words appearing from the front pages of each publication.
+  
+  -   Gather all words appearing from the front pages of each publication.
 
 -   Assign a sentiment to each word using the NRC Emotion Lexicon, which categorizes words based on various emotions.
 
@@ -539,8 +519,7 @@ renderPlot({
     group_by(sentiment, newspaper_title) |>
     slice_max(n, n = 10) |>
     ungroup()
-  
-  
+
   
   if (nrow(test) == 0) {
     ggplot() +
@@ -561,7 +540,6 @@ renderPlot({
       ) +
       theme_minimal()
   }
-  
 })
 ```
 ## Column {data-width="300"}
@@ -569,8 +547,8 @@ renderPlot({
 To your left, you will find two drop down menus. One is to select a state (or states) from the United States, and the other is to select a category of the NRC Emotion Lexicon. Based on the selection from the drop down menus, a plot showing the word count for newspaper publishers related to the chosen sentiment in the selected state(s).
 
 Steps taken to gather data:
-
-- Gather all words appearing from the front pages of each publication.
+  
+  - Gather all words appearing from the front pages of each publication.
 
 - Assign a sentiment to each word using the NRC Emotion Lexicon, which categorizes words based on various emotions.
 
@@ -588,13 +566,13 @@ If there is no data for a given combination of "State" and "Sentiment", no plot 
 
 ```{r}
 dateRangeInput(
-    inputId = "date_selector",
-    label = "Select Date Range",
-    start = "1941-09-07",
-    end = "1942-03-07",
-    min = "1941-09-07",
-    max = "1942-03-07"
-  )
+  inputId = "date_selector",
+  label = "Select Date Range",
+  start = "1941-09-07",
+  end = "1942-03-07",
+  min = "1941-09-07",
+  max = "1942-03-07"
+)
 ```
 
 This section creates a network graph of commonly occurring phrases from the text of the front pages of newspapers from the entire United States. You may filter the range of dates that is taken from the data to see what common phrases were said in the front page during specific days.
@@ -609,11 +587,11 @@ filtered_ngrams <- reactive({
     add_count(word) |>
     filter(n >= 75) |>
     filter(date >= as.Date(input$date_selector[1]) & 
-           date <= as.Date(input$date_selector[2]))
+             date <= as.Date(input$date_selector[2]))
 })
 
 renderPlot({
-
+  
   ngram_data <- filtered_ngrams()
   
   ngram_graph <- get_ngrams(ngram_data)

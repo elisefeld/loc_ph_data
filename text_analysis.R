@@ -4,80 +4,30 @@ library(stopwords)
 library(igraph)
 library(janitor)
 library(rappdirs)
+library(textdata)
 
 
-download_lexicon <- function(type) {
-  if (type == "afinn") {
-    url <- "http://www2.imm.dtu.dk/pubdb/edoc/imm6010.zip"
-    file <- "imm6010.zip"
-  }
-  
-  if (type == "nrc") {
-    url <- "http://saifmohammad.com/WebDocs/Lexicons/NRC-Emotion-Lexicon.zip"
-    file <- "NRC-Emotion-Lexicon.zip"
-  }
-  
-  cache_dir <- rappdirs::user_cache_dir(paste0("/textdata/", type))
-  
-  if (!dir.exists(cache_dir)) {
-    dir.create(cache_dir, recursive = TRUE)
-  }
-  
-  destination <- file.path(cache_dir, "file")
-  
-  download.file(url, destfile = destination, mode = "wb")
-  
-  if (type == "afinn") {
-    lexicon <- textdata::lexicon_afinn(manual_download = TRUE)
-  }
-  if (type == "nrc") {
-    lexicon <- textdata::lexicon_nrc_emotion(manual_download = TRUE)
-  }
-  return(lexicon)
-}
-
-analyze_sentiment <- function(data, type) {
-  if (type == "afinn") {
-    download_lexicon("afinn")
-  }
-  sentiments <- get_sentiments(type)
+analyze_sentiment <- function(data, lexicon) {
   
   sentiment <- data |>
-    inner_join(sentiments, by = "word") # add sentiments to data
-    
-  if (type == "bing") {
-    # Average Bing Sentiment by Paper
-    average <- sentiment |>
-      mutate(sentiment_value = ifelse(sentiment == "positive", 1, -1)) |>
-      group_by(index) |>
-      summarize(avg_sentiment = mean(sentiment_value, na.rm = TRUE))
-    
-    
-    # Average Bing Sentiment by Date
-    date <- sentiment |>
-      group_by(index, date) |>
-      mutate(sentiment_value = ifelse(sentiment == "positive", 1, -1)) |>
-      summarize(avg_sentiment = mean(sentiment_value, na.rm = TRUE), .groups = "drop") |>
-      arrange(date)
-  }
+    inner_join(lexicon, by = "word")
   
-  if (type == "afinn") {
-    # Average Afinn Sentiment by Paper
-    average <- sentiment |>
-      group_by(index) |>
-      summarize(avg_sentiment = mean(value, na.rm = TRUE))
-    
-    # Average Afinn Sentiment by Date
-    date <- sentiment |>
-      group_by(index, date) |>
-      summarize(avg_sentiment = mean(value, na.rm = TRUE), .groups = "drop") |>
-      arrange(date)
-  }
+  # Average Sentiment by Paper
+  average <- sentiment |>
+    group_by(index) |>
+    summarize(avg_sentiment = mean(value, na.rm = TRUE))
   
-    summary <- date |>
-      group_by(date) |>
-      summarize(avg_sentiment = mean(avg_sentiment, na.rm = TRUE), .groups = "drop")
-
+  
+  # Average Sentiment by Date
+  date <- sentiment |>
+    group_by(index, date) |>
+    summarize(avg_sentiment = mean(value, na.rm = TRUE), .groups = "drop") |>
+    arrange(date)
+  
+  summary <- date |>
+    group_by(date) |>
+    summarize(avg_sentiment = mean(avg_sentiment, na.rm = TRUE), .groups = "drop")
+  
   
   return(list(sentiment, average, summary))
 }

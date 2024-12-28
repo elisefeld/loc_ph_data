@@ -7,6 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(textdata)
 source("scraping.R")
 source("data_prep.R")
 ```
@@ -27,6 +28,17 @@ saveRDS(words_clean, "words_clean.rds")
 
 ngrams <- tokenize_words(data = pearl_data, text_column = text_data, type = "ngrams")
 saveRDS(ngrams, "ngrams.rds")
+```
 
+```{r lexicons}
+bing <- lexicon_bing() |> 
+  distinct(word, .keep_all = TRUE) |>
+  mutate(value = ifelse(sentiment == "positive", 1, -1))
 
+afinn <- lexicon_afinn()
+nrc <- lexicon_nrc()
+
+saveRDS(bing, "bing.rds")
+saveRDS(afinn, "afinn.rds")
+saveRDS(nrc, "nrc.rds")
 ```
