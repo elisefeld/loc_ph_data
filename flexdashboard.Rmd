@@ -19,6 +19,8 @@ resource_files:
 ```{r global, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 library(shinyWidgets)
+library(gt)
+library(ggraph)
 source("text_analysis.R")
 ```
 
@@ -193,19 +195,23 @@ Select a newspaper title from the dropdown menu to see how often the 1000 most c
 keywords_list <- get_keywords_list()
 keywords <- get_keywords(words_clean, keywords_list)
 
+newspaper_titles <- unique(words_clean$newspaper_title)
+
+
 inputPanel(
   pickerInput(
     inputId = "newspaper_titles",
     label = "Select Newspaper Title:",
-    choices = unique(words_clean$newspaper_title),
-    multiple = TRUE,
+    choices = newspaper_titles,
+    multiple = FALSE,
     options = pickerOptions(actionsBox = TRUE, liveSearch = TRUE)
   ))
+
 
 renderTable({
   words_clean |>
     count(word, newspaper_title, sort = TRUE) |>
-    head(1000) |>
+    head(100) |>
     filter(newspaper_title %in% c(input$newspaper_titles)) |>
     gt()
 })
@@ -434,9 +440,6 @@ ggplot(afinn_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentimen
 ```
 
 
-
-
-
 # Publishers and Sentiment
 ## Column {data-width="400"}
 ### Parameters
@@ -516,266 +519,7 @@ renderPlot({
     filter(state == selected_state & sentiment == selected_sentiment) |>
     count(newspaper_title, sentiment, sort = TRUE) |>
     group_by(sentiment, newspaper_title) |>
-    slice_max(n, n = 10) |>
-    ungroup()
-
-  
-  if (nrow(test) == 0) {
-    ggplot() +
-      geom_blank() +
-      labs(title = "No data available for the selected inputs",
-           x = NULL,
-           y = NULL) +
-      theme_void() 
-  } else {
-    test |>
-      ggplot(aes(x = reorder(newspaper_title, n), y = n, fill = sentiment)) +
-      geom_col(show.legend = FALSE) +
-      coord_flip() +
-      facet_wrap(~ sentiment, scales = "free_y") +
-      labs(title = paste("Sentiments for Publishers in", str_to_title(selected_state)),
-           x = "Publisher",
-           y = "Word Count"
-      ) +
-      theme_minimal()
-  }
-})
-```
-## Column {data-width="300"}
-### Description
-To your left, you will find two drop down menus. One is to select a state (or states) from the United States, and the other is to select a category of the NRC Emotion Lexicon. Based on the selection from the drop down menus, a plot showing the word count for newspaper publishers related to the chosen sentiment in the selected state(s).
-
-Steps taken to gather data:
-  
-  - Gather all words appearing from the front pages of each publication.
-
-- Assign a sentiment to each word using the NRC Emotion Lexicon, which categorizes words based on various emotions.
-
-- Organize the words by their respective publishers.
-
-- Count the frequency of each sentiment across publishers, providing insight into the emotional tone of each publication.
-
-The plot will take each publisher from the selected state and plot the number of times the selected sentiment appears on the front page.
-
-If there is no data for a given combination of "State" and "Sentiment", no plot will be generated.
-
-# Common Phrases
-
-## Column {data-width="300"}
-
-```{r}
-dateRangeInput(
-  inputId = "date_selector",
-  label = "Select Date Range",
-  start = "1941-09-07",
-  end = "1942-03-07",
-  min = "1941-09-07",
-  max = "1942-03-07"
-)
-```
-
-This section creates a network graph of commonly occurring phrases from the text of the front pages of newspapers from the entire United States. You may filter the range of dates that is taken from the data to see what common phrases were said in the front page during specific days.
-
-Select the dates for which you would like to see, and a plot will generate to the right.
-
-## Column
-
-```{r}
-filtered_ngrams <- reactive({
-  ngrams |>
-    add_count(word) |>
-    filter(n >= 75) |>
-    filter(date >= as.Date(input$date_selector[1]) & 
-             date <= as.Date(input$date_selector[2]))
-})
-
-renderPlot({
-  
-  ngram_data <- filtered_ngrams()
-  
-  ngram_graph <- get_ngrams(ngram_data)
-  
-  set.seed(2017)
-  
-  ggraph(ngram_graph, layout = "fr") +
-    geom_edge_link() +
-    geom_node_point() +
-    geom_node_text(aes(label = name), vjust = 1, hjust = 1)
-})
-```
-
-### Common Words (Afinn Sentiment)
-
-```{r}
-afinn_result <- analyze_sentiment(data = words_clean, afinn)
-afinn <- afinn_result[[1]]
-afinn_avg <- afinn_result[[2]]
-afinn_date <- afinn_result[[3]]
-
-afinn |>
-  group_by(value, word) |>
-  summarize(n = n()) |>
-  arrange(value, desc(n)) |>
-  group_by(value) |>
-  slice_max(n, n = 10) |>
-  ungroup() |>
-  ggplot(aes(reorder(word, n), n, fill = as.factor(value))) +
-  geom_col(show.legend = FALSE) +
-  coord_flip() +
-  facet_wrap( ~ value, scales = "free") +
-  labs(
-    x = "Word",
-    y = "Count",
-    title = "Most Common Words by Sentiment",
-    subtitle = "Based on the Afinn Sentiment Lexicon"
-  ) +
-  theme_minimal()
-```
-
-### NRC Sentiment
-
-```{r}
-nrc <- get_sentiments("nrc")
-words_clean |>
-  inner_join(nrc) |>
-  count(word, sentiment, sort = TRUE) |>
-  group_by(sentiment) |>
-  slice_max(n, n = 10) |>
-  ungroup() |> 
-  ggplot(aes(x = reorder(word, n), y = n, fill = sentiment)) +
-  geom_col(show.legend = FALSE) +
-  coord_flip() +
-  facet_wrap(~ sentiment, scales = "free_y") +
-  labs(
-    x = "Word",
-    y = "Count",
-    title = "Top 10 Most Common Words by Sentiment",
-    subtitle = "Based on NRC Sentiment Lexicon"
-  ) +
-  theme_minimal()
-```
-
-## Row {.tabset .tabset-fade}
-
-### Bing Sentiment Over Time
-
-```{r}
-ggplot(bing_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment > 0)) +
-  geom_col(show.legend = FALSE) +
-  geom_vline(xintercept = as.Date("1941-12-07"), color = "black") +
-  labs(
-    title = "Average Bing Sentiment Over Time",
-    subtitle = "Based on the Bing Sentiment Lexicon",
-    x = "Date",
-    y = "Average Sentiment",
-    caption = "The black line represents the bombing of Pearl Harbor on December 7th, 1941. \n The United States declared war on Japan the next day."
-  ) +
-  scale_x_date(date_breaks = "1 month", date_labels = "%b %Y") +
-  theme_minimal()
-
-```
-
-### Afinn Sentiment Over Time
-
-```{r}
-ggplot(afinn_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentiment > 0)) +
-  geom_col(show.legend = FALSE) +
-  geom_vline(xintercept = as.Date("1941-12-07"), color = "black") +
-  labs(
-    title = "Average Afinn Sentiment Over Time",
-    subtitle = "Based on the Afinn Sentiment Lexicon",
-    x = "Date",
-    y = "Average Sentiment",
-    caption = "The black line represents the bombing of Pearl Harbor on December 7th, 1941. \n The United States declared war on Japan the next day."
-  ) +
-  scale_x_date(date_breaks = "1 month", date_labels = "%b %Y") +
-  theme_minimal()
-```
-
-
-
-
-
-# Publishers and Sentiment
-## Column {data-width="400"}
-### Parameters
-```{r}
-selectInput(inputId = "state_selector",
-            label = "Select State:",
-            choices = c("Alaska" = "alaska",
-                        "Arizona" = "arizona",
-                        "Arkansas" = "arkansas",
-                        "California" = "california",
-                        "Connecticut" = "connecticut",
-                        "District Of Columbia" = "district of columbia",
-                        "Florida" = "florida",
-                        "Illinois" = "illinois",
-                        "Indiana" = "indiana",
-                        "Maryland" = "maryland",
-                        "Massachusetts" = "massachusetts",
-                        "Michigan" = "michigan",
-                        "Michigan, New York, Ohio" = "michigan, new york, ohio",
-                        "Minnesota" = "minnesota",
-                        "Minnesota, Wisconsin" = "minnesota, wisconsin",
-                        "Mississippi" = "mississippi",
-                        "Montana" = "montana",
-                        "Nebraska" = "nebraska",
-                        "New York" = "new york",
-                        "North Carolina" = "north carolina",
-                        "North Carolina, South Carolina" = "north carolina, south carolina",
-                        "Ohio" = "ohio",
-                        "Ohio, Michigan" = "ohio, michigan",
-                        "Virgin Islands" = "virgin islands",
-                        "Virginia" = "virginia",
-                        "Washington" = "washington",
-                        "West Virginia" = "west virginia"),
-            selected = "Alaska",
-            multiple = FALSE)
-selectInput(inputId = "sentiment_selector",
-            label = "Select Sentiment:",
-            choices = c("Anger" = "anger",
-                        "Anticipation" = "anticipation",
-                        "Disgust" = "disgust",
-                        "Fear" = "fear",
-                        "Joy" = "joy",
-                        "Negative" = "negative",
-                        "Sadness" = "sadness",
-                        "Surprise" = "surprise",
-                        "Trust" = "trust"),
-            selected = "Anger",
-            multiple = FALSE)
-```
-
-Above, you will find two drop down menus. One is to select a state (or states) from the United States, and the other is to select a category of the NRC Emotion Lexicon. Based on the selection from the drop down menus, a plot showing the word count for newspaper publishers related to the chosen sentiment in the selected state(s).
-
-**Steps taken to gather data:**
-  
-  -   Gather all words appearing from the front pages of each publication.
-
--   Assign a sentiment to each word using the NRC Emotion Lexicon, which categorizes words based on various emotions.
-
--   Organize the words by their respective publishers.
-
--   Count the frequency of each sentiment across publishers, providing insight into the emotional tone of each publication.
-
-The plot will take each publisher from the selected state and plot the number of times the selected sentiment appears on the front page.
-
-If there is no data for a given combination of "State" and "Sentiment", no plot will be generated.
-
-## Plot
-
-
-```{r, echo=FALSE}
-renderPlot({
-  selected_state <- str_to_lower(input$state_selector)
-  selected_sentiment <- str_to_lower(input$sentiment_selector)
-  
-  test <- words_clean |>
-    inner_join(nrc, by = "word") |>
-    filter(state == selected_state & sentiment == selected_sentiment) |>
-    count(newspaper_title, sentiment, sort = TRUE) |>
-    group_by(sentiment, newspaper_title) |>
-    slice_max(n, n = 10) |>
+    slice_max(n, n = 5) |>
     ungroup()
   
   
@@ -864,3 +608,5 @@ renderPlot({
     geom_node_text(aes(label = name), vjust = 1, hjust = 1)
 })
 ```
+
+

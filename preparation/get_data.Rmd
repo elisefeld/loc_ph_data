@@ -15,11 +15,10 @@ source("data_prep.R")
 ```{r}
 newspapers_data <- get_paginated_data(start_date = "1941-09-07",
                    end_date = "1942-03-07",
-                   fa = "language:english",
-                   file_path = "data/newspapers.rds")
+                   fa = "language:english")
 #saves the data to a file called "1941-09-07_to_1942-03-07_newspapers.rds"
 
-pearl_data <- prepare_data("1941-09-07_to_1942-03-07_newspapers.rds")
+prepare_data("1941-09-07_to_1942-03-07_newspapers.rds")
 #saves the clean data to a file called "clean_data.rds"
 
 words <- tokenize_words(data = pearl_data, text_column = text_data, type = "words")

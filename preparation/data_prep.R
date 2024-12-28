@@ -32,21 +32,6 @@ iso_to_language <- data.frame(
 prepare_data <- function(data) {
   raw_data <- readRDS(data)
   clean_data <- raw_data |>
-    select(index,
-           date,
-           title,
-           partof_title,
-           description,
-           url,
-           image_url,
-           language,
-           location_state,
-           location_county,
-           location_city,
-           contributor,
-           publication_frequency,
-           subject,
-           subject_ethnicity) |>
     mutate(across(where(is.list) & !all_of("subject"), # remove list columns
                   ~ sapply(.x, function(val) paste(val, collapse = ', ')))) |>
     mutate(language = str_remove(language, "[, ]?english[, ]?"), # remove english from the language column
@@ -62,13 +47,14 @@ prepare_data <- function(data) {
     mutate(as_date = ymd(date)) |> # convert date to date format
     mutate(before_pearl_harbor = ifelse(as_date < "1941-12-07", "Before Pearl Harbor", "After Pearl Harbor"), # create a new column for before or after Pearl Harbor
           newspaper = str_remove(newspaper_title, " \\(.*"), # remove anything after parentheses from the newspaper title
-          newspaper = str_trim(newspaper)) 
+          newspaper = str_trim(newspaper)) |>
+    filter(is.na(text_data) == FALSE) |>
+    select(index, date, newspaper, text_data, language, state, publication_frequency, subject, ethnicity, before_pearl_harbor)
   
   clean_data <- clean_data |>
     left_join(iso_to_language, by = "language") # join in the iso codes
   
-  clean_data <<- clean_data
-  saveRDS(clean_data, "clean_data.rds")
+  saveRDS(sample, "clean_data.rds")
 }
 
 
