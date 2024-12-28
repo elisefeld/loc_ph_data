@@ -8,8 +8,7 @@ library(textdata)
 
 
 analyze_sentiment <- function(data, lexicon) {
-  
-  if (lexicon != nrc) {
+
   sentiment <- data |>
     inner_join(lexicon, by = "word")
   
@@ -28,7 +27,6 @@ analyze_sentiment <- function(data, lexicon) {
   summary <- date |>
     group_by(date) |>
     summarize(avg_sentiment = mean(avg_sentiment, na.rm = TRUE), .groups = "drop")
-  }
   
   
   return(list(sentiment, average, summary))
