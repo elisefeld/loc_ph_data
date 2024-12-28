@@ -71,6 +71,8 @@ knitr::include_graphics("images/pearl_harbor_front_page.png")
 
 ## Sidebar {.sidebar}
 
+**Description:**
+
 Here is an overview of the entire data set from 09/07/1941 to 03/07/1942.
 
 You can see the number of articles by several different variables.
@@ -179,6 +181,8 @@ data_subjects |>
 
 ## Sidebar {.sidebar}
 
+**Description:**
+
 Select a newspaper title from the dropdown menu to see how often the 1000 most common words appeared in the front pages of the selected newspaper.
 
 ------------------------------------------------------------------------
@@ -206,7 +210,6 @@ inputPanel(
     multiple = FALSE,
     options = pickerOptions(actionsBox = TRUE, liveSearch = TRUE)
   ))
-
 
 renderTable({
   words_clean |>
@@ -272,6 +275,8 @@ inputPanel(
   ))
 ```
 
+**Description:**
+
 Keywords were chosen from several resources, including Library of Congress' [Chronicling America Race and Ethnicity Keyword Thesaurus](https://edsitement.neh.gov/media-resources/race-and-ethnicity-keyword-thesaurus-chronicling-america) and the Houston Holocaust Museum's [Vocabulary List.](https://hmh.org/education/resources/vocabulary-terms-related-holocaust/)
 
 *Please note that many of these words are derogatory terms for ethnic groups that were used at the time, and were included to provide a comprehensive view of the language used towards ethnic groups in the newspapers.*
@@ -310,6 +315,8 @@ renderPlot({
 # Sentiment Analysis
 
 ## Sidebar {.sidebar}
+
+**Description:**
 
 -   The Bing Sentiment Lexicon ranges from -1 to 1, with -1 being the most negative and 1 being the most positive.
 
@@ -440,7 +447,7 @@ ggplot(afinn_date, aes(x = as.Date(date), y = avg_sentiment, fill = avg_sentimen
 ```
 
 
-# Publishers and Sentiment
+# Publisher Sentiment
 ## Column {data-width="400"}
 ### Parameters
 ```{r}
@@ -475,6 +482,7 @@ selectInput(inputId = "state_selector",
                         "West Virginia" = "west virginia"),
             selected = "Alaska",
             multiple = FALSE)
+
 selectInput(inputId = "sentiment_selector",
             label = "Select Sentiment:",
             choices = c("Anger" = "anger",
@@ -490,7 +498,15 @@ selectInput(inputId = "sentiment_selector",
             multiple = FALSE)
 ```
 
-Above, you will find two drop down menus. One is to select a state (or states) from the United States, and the other is to select a category of the NRC Emotion Lexicon. Based on the selection from the drop down menus, a plot showing the word count for newspaper publishers related to the chosen sentiment in the selected state(s).
+**Description:**
+
+Above, you will find two drop down menus. One is to select a state (or states) from the United States, and the other is to select a category of the NRC Emotion Lexicon. 
+
+Based on the selection from the drop down menus, a plot showing the word count for newspaper publishers related to the chosen sentiment in the selected state(s).
+
+The plot will take each publisher from the selected state and plot the number of times the selected sentiment appears on the front page.
+
+If there is no data for a given combination of "State" and "Sentiment" no plot will be generated.
 
 **Steps taken to gather data:**
   
@@ -502,69 +518,54 @@ Above, you will find two drop down menus. One is to select a state (or states) f
 
 -   Count the frequency of each sentiment across publishers, providing insight into the emotional tone of each publication.
 
-The plot will take each publisher from the selected state and plot the number of times the selected sentiment appears on the front page.
-
-If there is no data for a given combination of "State" and "Sentiment", no plot will be generated.
 
 ## Plot
-
-
 ```{r, echo=FALSE}
+
+filtered_data <- reactive({
+  req(input$state_selector, input$sentiment_selector)
+  
+ words_clean |>
+   inner_join(nrc, by = "word") |>
+    filter(state == str_to_lower(input$state_selector),
+           sentiment == str_to_lower(input$sentiment_selector))
+   })
+
+
 renderPlot({
-  selected_state <- str_to_lower(input$state_selector)
-  selected_sentiment <- str_to_lower(input$sentiment_selector)
+  data <- filtered_data()
   
-  test <- words_clean |>
-    inner_join(nrc, by = "word") |>
-    filter(state == selected_state & sentiment == selected_sentiment) |>
-    count(newspaper_title, sentiment, sort = TRUE) |>
-    group_by(sentiment, newspaper_title) |>
-    slice_max(n, n = 5) |>
-    ungroup()
-  
-  
-  
-  if (nrow(test) == 0) {
+  if (is.null(data) || nrow(data) == 0 || ncol(data) == 0) {
     ggplot() +
       geom_blank() +
       labs(title = "No data available for the selected inputs",
            x = NULL,
            y = NULL) +
       theme_void() 
-  } else {
-    test |>
-      ggplot(aes(x = reorder(newspaper_title, n), y = n, fill = sentiment)) +
-      geom_col(show.legend = FALSE) +
-      coord_flip() +
-      facet_wrap(~ sentiment, scales = "free_y") +
-      labs(title = paste("Sentiments for Publishers in", str_to_title(selected_state)),
-           x = "Publisher",
-           y = "Word Count"
-      ) +
-      theme_minimal()
   }
   
+  else {
+    filter <- data |>
+    count(newspaper_title, sentiment, sort = TRUE) |>
+    group_by(sentiment, newspaper_title) |>
+    slice_max(n, n = 10) |>
+    ungroup()
+    
+    filter |>
+    ggplot(aes(x = reorder(newspaper_title, n), y = n, fill = sentiment)) +
+    geom_col(show.legend = FALSE) +
+    coord_flip() +
+    #facet_wrap(~ sentiment, scales = "free_y") +
+    labs(title = paste("Sentiments for Publishers in", str_to_title(input$state_selector)),
+         x = "Publisher",
+         y = "Word Count"
+    ) +
+    theme_minimal()
+    }
 })
 ```
-## Column {data-width="300"}
-### Description
-To your left, you will find two drop down menus. One is to select a state (or states) from the United States, and the other is to select a category of the NRC Emotion Lexicon. Based on the selection from the drop down menus, a plot showing the word count for newspaper publishers related to the chosen sentiment in the selected state(s).
 
-Steps taken to gather data:
-  
-  - Gather all words appearing from the front pages of each publication.
-
-- Assign a sentiment to each word using the NRC Emotion Lexicon, which categorizes words based on various emotions.
-
-- Organize the words by their respective publishers.
-
-- Count the frequency of each sentiment across publishers, providing insight into the emotional tone of each publication.
-
-The plot will take each publisher from the selected state and plot the number of times the selected sentiment appears on the front page.
-
-If there is no data for a given combination of "State" and "Sentiment", no plot will be generated.
-
-# Common Phrases
+# Phrases
 
 ## Column {data-width="300"}
 
@@ -579,9 +580,11 @@ dateRangeInput(
 )
 ```
 
+**Description:**
+
 This section creates a network graph of commonly occurring phrases from the text of the front pages of newspapers from the entire United States. You may filter the range of dates that is taken from the data to see what common phrases were said in the front page during specific days.
 
-Select the dates for which you would like to see, and a plot will generate to the right.
+Select the date range you would like to see and a plot will generate to the right.
 
 ## Column
 
